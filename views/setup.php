@@ -15,7 +15,7 @@
                 <option value="intl">B/Bb + końcówka m (F#m, Bm)</option>
             </select>
         </label>
-        <label class="check-row"><input type="checkbox" name="demo" value="1" checked> Dodaj pełny Śpiewnik guanelliański (257 pozycji)</label>
+        <label class="check-row"><input type="checkbox" name="demo" value="1" checked> Dodaj pełną bibliotekę Google + OpenLP (889 pozycji)</label>
         <button class="button button-primary button-wide" type="submit">Utwórz BandBook</button>
     </form>
 </section>

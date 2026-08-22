@@ -15,7 +15,8 @@ BandBook to samodzielna aplikacja PHP dla zespołu muzycznego. Pozwala zarządza
 - publiczny widok tekstu z linkiem dla uczestników i trybem pełnoekranowym;
 - przezroczysta nakładka tekstowa do dodania w OBS jako Browser Source;
 - konto administratora tworzone przy pierwszym uruchomieniu;
-- opcjonalny, dołączony Śpiewnik guanelliański z 257 pozycjami i 922 częściami pieśni.
+- opcjonalna biblioteka startowa: 257 pozycji ze Śpiewnika guanelliańskiego oraz 632 rekordy OpenLP;
+- zachowane alternatywne tytuły, autorzy, śpiewniki i kolejność części z formatu OpenLyrics.
 
 ## Wymagania hostingu
 
@@ -54,7 +55,7 @@ Pusta baza musi już istnieć. Tabele są tworzone automatycznie przy pierwszym 
 ## Pierwsze użycie
 
 1. Utwórz administratora i wybierz domyślną notację chwytów.
-2. Pozostaw zaznaczony import Śpiewnika guanelliańskiego, aby od razu dodać 257 pozycji. Import można bezpiecznie uruchomić ponownie — istniejące tytuły są pomijane.
+2. Pozostaw zaznaczony import biblioteki, aby od razu dodać 889 pozycji z Dokumentów Google i OpenLP. Import można bezpiecznie uruchomić ponownie — istniejące tytuły są pomijane.
 3. Sprawdź lub edytuj formy w zakładce **Pieśni**.
 4. Utwórz wydarzenie i dodaj pieśni do repertuaru.
 5. Dostosuj transpozycję, tempo, komentarze i formę każdej pozycji.
@@ -90,6 +91,14 @@ Pełny śpiewnik można też zaimportować do skonfigurowanej bazy z wiersza pol
 ```text
 php scripts/import_songbook.php
 ```
+
+Sam zestaw OpenLP można zaimportować poleceniem:
+
+```text
+php scripts/import_openlp.php
+```
+
+Pliki eksportu OpenLP nie zawierały chwytów. Import zachowuje tekst, części, formę, alternatywne tytuły, autorów i przypisanie do śpiewników. Warianty kolidujące z wcześniejszą biblioteką otrzymują dopisek `OpenLP`, zamiast zastępować wersje zawierające chwyty.
 
 Źródłowy eksport można ponownie przetworzyć poleceniem opisanym na początku pliku `scripts/parse_songbook.php`. Rekordy, w których układ Dokumentów Google był niejednoznaczny, mają w komentarzu oznaczenie **Do sprawdzenia**; żadna treść nie została z tego powodu pominięta.
 

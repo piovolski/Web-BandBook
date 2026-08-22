@@ -684,15 +684,32 @@ final class Repository
     /** @return array{imported: int, skipped: int} */
     public function seedSongbook(): array
     {
-        $path = dirname(__DIR__) . '/data/songbook.json';
+        $result = ['imported' => 0, 'skipped' => 0];
+        foreach (['songbook.json', 'openlp_songs.json'] as $file) {
+            $partial = $this->importSongsFromJson(dirname(__DIR__) . '/data/' . $file);
+            $result['imported'] += $partial['imported'];
+            $result['skipped'] += $partial['skipped'];
+        }
+        return $result;
+    }
+
+    /** @return array{imported: int, skipped: int} */
+    public function seedOpenLpSongs(): array
+    {
+        return $this->importSongsFromJson(dirname(__DIR__) . '/data/openlp_songs.json');
+    }
+
+    /** @return array{imported: int, skipped: int} */
+    private function importSongsFromJson(string $path): array
+    {
         $json = file_get_contents($path);
         if ($json === false) {
-            throw new RuntimeException('Nie można odczytać dołączonego śpiewnika.');
+            throw new RuntimeException('Nie można odczytać pliku importu: ' . basename($path));
         }
 
         $songs = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         if (!is_array($songs)) {
-            throw new RuntimeException('Dołączony śpiewnik ma nieprawidłowy format.');
+            throw new RuntimeException('Plik importu ma nieprawidłowy format: ' . basename($path));
         }
 
         return $this->importSongs($songs);

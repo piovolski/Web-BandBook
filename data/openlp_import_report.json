@@ -1,0 +1,785 @@
+{
+    "source_directory": "C:\\Users\\Volski.io\\Downloads\\songs\\songs",
+    "generated_at": "2026-08-22T20:00:31+00:00",
+    "xml_files": 633,
+    "songs": 632,
+    "sections": 1968,
+    "songs_with_explicit_order": 326,
+    "songs_without_explicit_order": 307,
+    "songs_with_songbook": 37,
+    "identical_files_skipped": 1,
+    "invalid_files": [],
+    "duplicates": {
+        "Ukojenie (TGD).xml": "Ukojenie (TGD)-1.xml"
+    },
+    "renamed_titles": {
+        "Abba Ojcze ((Guanellianie)).xml": {
+            "source": "Abba Ojcze",
+            "imported": "Abba Ojcze — OpenLP"
+        },
+        "Adoramus Te Domine (Inny).xml": {
+            "source": "Adoramus Te Domine",
+            "imported": "Adoramus Te Domine — OpenLP"
+        },
+        "Amen (Guanellianie).xml": {
+            "source": "Amen",
+            "imported": "Amen — OpenLP"
+        },
+        "Barka ((Guanellianie)).xml": {
+            "source": "Barka",
+            "imported": "Barka — OpenLP"
+        },
+        "Bo góry mogą ustąpić (Autor nieznany).xml": {
+            "source": "Bo góry mogą ustąpić",
+            "imported": "Bo góry mogą ustąpić — OpenLP"
+        },
+        "Boże Twa łaska ((Guanellianie)).xml": {
+            "source": "Boże Twa łaska",
+            "imported": "Boże Twa łaska — OpenLP"
+        },
+        "Boże Twa łaska (Deus Meus).xml": {
+            "source": "Boże Twa łaska",
+            "imported": "Boże Twa łaska — OpenLP 2"
+        },
+        "Boży Baranku wielbię Cię ((Guanellianie)).xml": {
+            "source": "Boży Baranku wielbię Cię",
+            "imported": "Boży Baranku wielbię Cię — OpenLP"
+        },
+        "Być bliżej Ciebie chcę ((Guanellianie)).xml": {
+            "source": "Być bliżej Ciebie chcę",
+            "imported": "Być bliżej Ciebie chcę — OpenLP"
+        },
+        "Była cicha i piękna ((Guanellianie)).xml": {
+            "source": "Była cicha i piękna",
+            "imported": "Była cicha i piękna — OpenLP"
+        },
+        "Bóg Adonai ((Guanellianie)).xml": {
+            "source": "Bóg Adonai",
+            "imported": "Bóg Adonai — OpenLP"
+        },
+        "Bóg kocha mnie ((Guanellianie)).xml": {
+            "source": "Bóg kocha mnie",
+            "imported": "Bóg kocha mnie — OpenLP"
+        },
+        "Bóg nasz Pan ((Guanellianie)).xml": {
+            "source": "Bóg nasz Pan",
+            "imported": "Bóg nasz Pan — OpenLP"
+        },
+        "Bóg tak umiłował świat ((Guanellianie)).xml": {
+            "source": "Bóg tak umiłował świat",
+            "imported": "Bóg tak umiłował świat — OpenLP"
+        },
+        "Bóg umierał ((Guanellianie)).xml": {
+            "source": "Bóg umierał",
+            "imported": "Bóg umierał — OpenLP"
+        },
+        "Bądź królem mego serca (Guanellianie).xml": {
+            "source": "Bądź królem mego serca",
+            "imported": "Bądź królem mego serca — OpenLP"
+        },
+        "Będę śpiewał Ci (Autor nieznany).xml": {
+            "source": "Będę śpiewał Ci",
+            "imported": "Będę śpiewał Ci — OpenLP"
+        },
+        "Będę śpiewał na cześć Pana ((Guanellianie)).xml": {
+            "source": "Będę śpiewał na cześć Pana",
+            "imported": "Będę śpiewał na cześć Pana — OpenLP"
+        },
+        "Błogosław duszo moja Pana ((Guanellianie)).xml": {
+            "source": "Błogosław duszo moja Pana",
+            "imported": "Błogosław duszo moja Pana — OpenLP"
+        },
+        "Chcemy Ciebie wielbić ((Guanellianie)).xml": {
+            "source": "Chcemy Ciebie wielbić",
+            "imported": "Chcemy Ciebie wielbić — OpenLP"
+        },
+        "Chcę wywyższać imię Twe ((Guanellianie)).xml": {
+            "source": "Chcę wywyższać imię Twe",
+            "imported": "Chcę wywyższać imię Twe — OpenLP"
+        },
+        "Chcę wywyższać Imię Twe (MercyMe).xml": {
+            "source": "Chcę wywyższać Imię Twe",
+            "imported": "Chcę wywyższać Imię Twe — OpenLP 2"
+        },
+        "Chlebie najcichszy ((Guanellianie)).xml": {
+            "source": "Chlebie najcichszy",
+            "imported": "Chlebie najcichszy — OpenLP"
+        },
+        "Chrystus Pan Boży Syn (Beata Bednarz).xml": {
+            "source": "Chrystus Pan Boży Syn",
+            "imported": "Chrystus Pan Boży Syn — OpenLP"
+        },
+        "Chwalcie Pana niebios ((Guanellianie)).xml": {
+            "source": "Chwalcie Pana niebios",
+            "imported": "Chwalcie Pana niebios — OpenLP"
+        },
+        "Chwalę Ciebie Panie ((Guanellianie)).xml": {
+            "source": "Chwalę Ciebie Panie",
+            "imported": "Chwalę Ciebie Panie — OpenLP"
+        },
+        "Chwalę Ciebie Panie (Autor nieznany).xml": {
+            "source": "Chwalę Ciebie Panie",
+            "imported": "Chwalę Ciebie Panie — OpenLP 2"
+        },
+        "Chwała Bogu Ojcu (Autor nieznany).xml": {
+            "source": "Chwała Bogu Ojcu",
+            "imported": "Chwała Bogu Ojcu — wersja 2"
+        },
+        "Chwała i cześć ((Guanellianie)).xml": {
+            "source": "Chwała i cześć",
+            "imported": "Chwała i cześć — OpenLP"
+        },
+        "Chwała Ojcu i Synowi i Duchowi Świętemu ((Guanellianie)).xml": {
+            "source": "Chwała Ojcu i Synowi i Duchowi Świętemu",
+            "imported": "Chwała Ojcu i Synowi i Duchowi Świętemu — OpenLP"
+        },
+        "Cichy zapada zmrok ((Guanellianie)).xml": {
+            "source": "Cichy zapada zmrok",
+            "imported": "Cichy zapada zmrok — OpenLP"
+        },
+        "Cóż Ci mogę Panie dać ((Guanellianie)).xml": {
+            "source": "Cóż Ci mogę Panie dać",
+            "imported": "Cóż Ci mogę Panie dać — OpenLP"
+        },
+        "Daj mi usłyszeć Twój głos (Guanellianie).xml": {
+            "source": "Daj mi usłyszeć Twój głos",
+            "imported": "Daj mi usłyszeć Twój głos — OpenLP"
+        },
+        "Dotknij Panie moich oczu (Autor nieznany).xml": {
+            "source": "Dotknij Panie moich oczu",
+            "imported": "Dotknij Panie moich oczu — OpenLP"
+        },
+        "Duchu Święty, tchnienie Ojca ((Guanellianie)).xml": {
+            "source": "Duchu Święty, tchnienie Ojca",
+            "imported": "Duchu Święty, tchnienie Ojca — OpenLP"
+        },
+        "Duchu Święty przyjdź i rozpal nas (Autor nieznany).xml": {
+            "source": "Duchu Święty przyjdź i rozpal nas",
+            "imported": "Duchu Święty przyjdź i rozpal nas — OpenLP"
+        },
+        "Duchu Święty wołam przyjdź (Autor nieznany).xml": {
+            "source": "Duchu Święty wołam przyjdź",
+            "imported": "Duchu Święty wołam przyjdź — OpenLP"
+        },
+        "Dziękuję ((Guanellianie), Exodus).xml": {
+            "source": "Dziękuję",
+            "imported": "Dziękuję — OpenLP"
+        },
+        "Dziękuję ((Guanellianie), TGD).xml": {
+            "source": "Dziękuję",
+            "imported": "Dziękuję — OpenLP 2"
+        },
+        "Dziękuję (Pieśniopisarze).xml": {
+            "source": "Dziękuję",
+            "imported": "Dziękuję — OpenLP 3"
+        },
+        "Dziękuję Ci ((Guanellianie)).xml": {
+            "source": "Dziękuję Ci",
+            "imported": "Dziękuję Ci — OpenLP"
+        },
+        "Dziś Jezus zamieszkał w mym sercu ((Guanellianie)).xml": {
+            "source": "Dziś Jezus zamieszkał w mym sercu",
+            "imported": "Dziś Jezus zamieszkał w mym sercu — OpenLP"
+        },
+        "Fanfary ((Guanellianie)).xml": {
+            "source": "Fanfary",
+            "imported": "Fanfary — OpenLP"
+        },
+        "Gdy drogi pomyli los zły ((Guanellianie)).xml": {
+            "source": "Gdy drogi pomyli los zły",
+            "imported": "Gdy drogi pomyli los zły — OpenLP"
+        },
+        "Góry do góry ((Guanellianie)).xml": {
+            "source": "Góry do góry",
+            "imported": "Góry do góry — OpenLP"
+        },
+        "Hallelujah ((Guanellianie)).xml": {
+            "source": "Hallelujah",
+            "imported": "Hallelujah — OpenLP"
+        },
+        "Hymn o krzyżu ((Guanellianie)).xml": {
+            "source": "Hymn o krzyżu",
+            "imported": "Hymn o krzyżu — OpenLP"
+        },
+        "Hymn ŚDM 2016 ((Guanellianie)).xml": {
+            "source": "Hymn ŚDM 2016",
+            "imported": "Hymn ŚDM 2016 — OpenLP"
+        },
+        "Idzie mój Pan (Autor nieznany).xml": {
+            "source": "Idzie mój Pan",
+            "imported": "Idzie mój Pan — OpenLP"
+        },
+        "Jak Dawid (Odnowa Sosnowiec).xml": {
+            "source": "Jak Dawid",
+            "imported": "Jak Dawid — OpenLP"
+        },
+        "Jakie piękne jest Imię Twe ((Guanellianie)).xml": {
+            "source": "Jakie piękne jest Imię Twe",
+            "imported": "Jakie piękne jest Imię Twe — OpenLP"
+        },
+        "Jak piękne jest mieszkanie Twe ((Guanellianie)).xml": {
+            "source": "Jak piękne jest mieszkanie Twe",
+            "imported": "Jak piękne jest mieszkanie Twe — OpenLP"
+        },
+        "Jak szczęśliwa Polska cała ((Guanellianie)).xml": {
+            "source": "Jak szczęśliwa Polska cała",
+            "imported": "Jak szczęśliwa Polska cała — OpenLP"
+        },
+        "Jak łania ((Guanellianie)).xml": {
+            "source": "Jak łania",
+            "imported": "Jak łania — OpenLP"
+        },
+        "Jego Miłość (TGD).xml": {
+            "source": "Jego Miłość",
+            "imported": "Jego Miłość — OpenLP"
+        },
+        "Jestem tu by wielbić (Autor nieznany).xml": {
+            "source": "Jestem tu by wielbić",
+            "imported": "Jestem tu by wielbić — OpenLP"
+        },
+        "Jesteś - Małe TGD ((Guanellianie)).xml": {
+            "source": "Jesteś - Małe TGD",
+            "imported": "Jesteś - Małe TGD — OpenLP"
+        },
+        "Jesteś Królem ((Guanellianie)).xml": {
+            "source": "Jesteś Królem",
+            "imported": "Jesteś Królem — OpenLP"
+        },
+        "Jesteś Królem (Autor nieznany).xml": {
+            "source": "Jesteś Królem",
+            "imported": "Jesteś Królem — OpenLP 2"
+        },
+        "Jesteśmy piękni ((Guanellianie)).xml": {
+            "source": "Jesteśmy piękni",
+            "imported": "Jesteśmy piękni — OpenLP"
+        },
+        "Jesteś Panie winnym krzewem ((Guanellianie)).xml": {
+            "source": "Jesteś Panie winnym krzewem",
+            "imported": "Jesteś Panie winnym krzewem — OpenLP"
+        },
+        "Jesteś życiem mym ((Guanellianie)).xml": {
+            "source": "Jesteś życiem mym",
+            "imported": "Jesteś życiem mym — OpenLP"
+        },
+        "Jest na świecie miłość ((Guanellianie)).xml": {
+            "source": "Jest na świecie miłość",
+            "imported": "Jest na świecie miłość — OpenLP"
+        },
+        "Jezus, Twe imię jak miód ((Guanellianie)).xml": {
+            "source": "Jezus, Twe imię jak miód",
+            "imported": "Jezus, Twe imię jak miód — OpenLP"
+        },
+        "Jezus Chrystus moim Panem jest ((Guanellianie)).xml": {
+            "source": "Jezus Chrystus moim Panem jest",
+            "imported": "Jezus Chrystus moim Panem jest — OpenLP"
+        },
+        "Jezus Chrystus moim Panem jest (Odnowa Sosnowiec).xml": {
+            "source": "Jezus Chrystus moim Panem jest",
+            "imported": "Jezus Chrystus moim Panem jest — OpenLP 2"
+        },
+        "Jezus daje nam zbawienie ((Guanellianie), Autor nieznany).xml": {
+            "source": "Jezus daje nam zbawienie",
+            "imported": "Jezus daje nam zbawienie — OpenLP"
+        },
+        "Jezus jest z nami tu (Autor nieznany).xml": {
+            "source": "Jezus jest z nami tu",
+            "imported": "Jezus jest z nami tu — OpenLP"
+        },
+        "Jezus Najwyższe Imię ((Guanellianie)).xml": {
+            "source": "Jezus Najwyższe Imię",
+            "imported": "Jezus Najwyższe Imię — OpenLP"
+        },
+        "Jezu tyś jest (Guanellianie).xml": {
+            "source": "Jezu tyś jest",
+            "imported": "Jezu tyś jest — OpenLP"
+        },
+        "Jezu ufam Tobie (Guanellianie).xml": {
+            "source": "Jezu ufam Tobie",
+            "imported": "Jezu ufam Tobie — OpenLP"
+        },
+        "Kantyk Mojżesza ((Guanellianie)).xml": {
+            "source": "Kantyk Mojżesza",
+            "imported": "Kantyk Mojżesza — OpenLP"
+        },
+        "Kantyk Symeona ((Guanellianie)).xml": {
+            "source": "Kantyk Symeona",
+            "imported": "Kantyk Symeona — OpenLP"
+        },
+        "Każdy wschód słońca ((Guanellianie)).xml": {
+            "source": "Każdy wschód słońca",
+            "imported": "Każdy wschód słońca — OpenLP"
+        },
+        "Kiedyś wino i chleb ((Guanellianie)).xml": {
+            "source": "Kiedyś wino i chleb",
+            "imported": "Kiedyś wino i chleb — OpenLP"
+        },
+        "Kocham Ciebie Jezu (Guanellianie).xml": {
+            "source": "Kocham Ciebie Jezu",
+            "imported": "Kocham Ciebie Jezu — OpenLP"
+        },
+        "Królowej Anielskiej śpiewajmy ((Guanellianie)).xml": {
+            "source": "Królowej Anielskiej śpiewajmy",
+            "imported": "Królowej Anielskiej śpiewajmy — OpenLP"
+        },
+        "Królowi wieków ((Guanellianie)).xml": {
+            "source": "Królowi wieków",
+            "imported": "Królowi wieków — OpenLP"
+        },
+        "Kto odczuwa pragnienie ((Guanellianie)).xml": {
+            "source": "Kto odczuwa pragnienie",
+            "imported": "Kto odczuwa pragnienie — OpenLP"
+        },
+        "Maryjo Matko mojego wezwania ((Guanellianie)).xml": {
+            "source": "Maryjo Matko mojego wezwania",
+            "imported": "Maryjo Matko mojego wezwania — OpenLP"
+        },
+        "Memu Bogu Królowi (Guanellianie).xml": {
+            "source": "Memu Bogu Królowi",
+            "imported": "Memu Bogu Królowi — OpenLP"
+        },
+        "Misericordias Domini ((Guanellianie)).xml": {
+            "source": "Misericordias Domini",
+            "imported": "Misericordias Domini — OpenLP"
+        },
+        "Miłość ukryta jest (Inny).xml": {
+            "source": "Miłość ukryta jest",
+            "imported": "Miłość ukryta jest — wersja 2"
+        },
+        "Moje serce (Guanellianie).xml": {
+            "source": "Moje serce",
+            "imported": "Moje serce — OpenLP"
+        },
+        "Mój ląd ((Guanellianie)).xml": {
+            "source": "Mój ląd",
+            "imported": "Mój ląd — OpenLP"
+        },
+        "Mój Zbawiciel ((Guanellianie)).xml": {
+            "source": "Mój Zbawiciel",
+            "imported": "Mój Zbawiciel — OpenLP"
+        },
+        "Mów do mnie Panie (Mate.O).xml": {
+            "source": "Mów do mnie Panie",
+            "imported": "Mów do mnie Panie — OpenLP"
+        },
+        "Nasz Bóg jest wielki ((Guanellianie)).xml": {
+            "source": "Nasz Bóg jest wielki",
+            "imported": "Nasz Bóg jest wielki — OpenLP"
+        },
+        "Nasz Bóg jest wielki (Matt Redman).xml": {
+            "source": "Nasz Bóg jest wielki",
+            "imported": "Nasz Bóg jest wielki — OpenLP 2"
+        },
+        "Nasz Pan jest potężny w mocy Swej ((Guanellianie)).xml": {
+            "source": "Nasz Pan jest potężny w mocy Swej",
+            "imported": "Nasz Pan jest potężny w mocy Swej — OpenLP"
+        },
+        "Nie było miejsca dla Ciebie (Kolęda).xml": {
+            "source": "Nie było miejsca dla Ciebie",
+            "imported": "Nie było miejsca dla Ciebie — wersja 2"
+        },
+        "Nie bój się wypłyń na głębię ((Guanellianie)).xml": {
+            "source": "Nie bój się wypłyń na głębię",
+            "imported": "Nie bój się wypłyń na głębię — OpenLP"
+        },
+        "Niechaj miłość Twa ((Guanellianie)).xml": {
+            "source": "Niechaj miłość Twa",
+            "imported": "Niechaj miłość Twa — OpenLP"
+        },
+        "Nie chcę w innym miejscu być ((Guanellianie)).xml": {
+            "source": "Nie chcę w innym miejscu być",
+            "imported": "Nie chcę w innym miejscu być — OpenLP"
+        },
+        "Niegodny ((Guanellianie)).xml": {
+            "source": "Niegodny",
+            "imported": "Niegodny — OpenLP"
+        },
+        "Oceany ((Guanellianie)).xml": {
+            "source": "Oceany",
+            "imported": "Oceany — OpenLP"
+        },
+        "Oczyść serce me ((Guanellianie)).xml": {
+            "source": "Oczyść serce me",
+            "imported": "Oczyść serce me — OpenLP"
+        },
+        "Ofiaruję Ci moje serce ((Guanellianie)).xml": {
+            "source": "Ofiaruję Ci moje serce",
+            "imported": "Ofiaruję Ci moje serce — OpenLP"
+        },
+        "Ofiaruję Panie Ci ((Guanellianie))-1.xml": {
+            "source": "Ofiaruję Panie Ci",
+            "imported": "Ofiaruję Panie Ci — OpenLP"
+        },
+        "Ofiaruję Panie Ci ((Guanellianie)).xml": {
+            "source": "Ofiaruję Panie Ci",
+            "imported": "Ofiaruję Panie Ci — OpenLP 2"
+        },
+        "Ofiaruję Tobie Panie mój (Autor nieznany).xml": {
+            "source": "Ofiaruję Tobie Panie mój",
+            "imported": "Ofiaruję Tobie Panie mój — OpenLP"
+        },
+        "Ojcze Don Guanella ((Guanellianie)).xml": {
+            "source": "Ojcze Don Guanella",
+            "imported": "Ojcze Don Guanella — OpenLP"
+        },
+        "O Jezu w Hostii utajony ((Guanellianie)).xml": {
+            "source": "O Jezu w Hostii utajony",
+            "imported": "O Jezu w Hostii utajony — OpenLP"
+        },
+        "Ona Matka ((Guanellianie)).xml": {
+            "source": "Ona Matka",
+            "imported": "Ona Matka — OpenLP"
+        },
+        "Only wanna sing ((Guanellianie)).xml": {
+            "source": "Only wanna sing",
+            "imported": "Only wanna sing — OpenLP"
+        },
+        "O Piękności niestworzona ((Guanellianie)).xml": {
+            "source": "O Piękności niestworzona",
+            "imported": "O Piękności niestworzona — OpenLP"
+        },
+        "Oto idzie mój Bóg (Autor nieznany).xml": {
+            "source": "Oto idzie mój Bóg",
+            "imported": "Oto idzie mój Bóg — OpenLP"
+        },
+        "Oto jest dzień ((Guanellianie)).xml": {
+            "source": "Oto jest dzień",
+            "imported": "Oto jest dzień — OpenLP"
+        },
+        "Oto są baranki młode ((Guanellianie)).xml": {
+            "source": "Oto są baranki młode",
+            "imported": "Oto są baranki młode — OpenLP"
+        },
+        "Otwórz Bogu serce swoje ((Guanellianie)).xml": {
+            "source": "Otwórz Bogu serce swoje",
+            "imported": "Otwórz Bogu serce swoje — OpenLP"
+        },
+        "Panie dobry jak chleb ((Guanellianie)).xml": {
+            "source": "Panie dobry jak chleb",
+            "imported": "Panie dobry jak chleb — OpenLP"
+        },
+        "Panie gdy tonę (Guanellianie).xml": {
+            "source": "Panie gdy tonę",
+            "imported": "Panie gdy tonę — OpenLP"
+        },
+        "Panie przyjdź do mego serca ((Guanellianie)).xml": {
+            "source": "Panie przyjdź do mego serca",
+            "imported": "Panie przyjdź do mego serca — OpenLP"
+        },
+        "Pan jest pasterzem mym ((Guanellianie)).xml": {
+            "source": "Pan jest pasterzem mym",
+            "imported": "Pan jest pasterzem mym — OpenLP"
+        },
+        "Pan mnie strzeże (Autor nieznany).xml": {
+            "source": "Pan mnie strzeże",
+            "imported": "Pan mnie strzeże — OpenLP"
+        },
+        "Pan wielki jest ((Guanellianie)).xml": {
+            "source": "Pan wielki jest",
+            "imported": "Pan wielki jest — OpenLP"
+        },
+        "Pełen łaski (XY Uwielbienie).xml": {
+            "source": "Pełen łaski",
+            "imported": "Pełen łaski — OpenLP"
+        },
+        "Podnieś mnie Jezu ((Guanellianie)).xml": {
+            "source": "Podnieś mnie Jezu",
+            "imported": "Podnieś mnie Jezu — OpenLP"
+        },
+        "Pokorna Służebnico (Mocni w Duchu).xml": {
+            "source": "Pokorna Służebnico",
+            "imported": "Pokorna Służebnico — OpenLP"
+        },
+        "Pomódl się Miriam ((Guanellianie)).xml": {
+            "source": "Pomódl się Miriam",
+            "imported": "Pomódl się Miriam — OpenLP"
+        },
+        "Powiedz tylko słowo ((Guanellianie)).xml": {
+            "source": "Powiedz tylko słowo",
+            "imported": "Powiedz tylko słowo — OpenLP"
+        },
+        "Prawda jedyna ((Guanellianie)).xml": {
+            "source": "Prawda jedyna",
+            "imported": "Prawda jedyna — OpenLP"
+        },
+        "Przed obliczem Pana ((Guanellianie)).xml": {
+            "source": "Przed obliczem Pana",
+            "imported": "Przed obliczem Pana — OpenLP"
+        },
+        "Przemiana ((Guanellianie)).xml": {
+            "source": "Przemiana",
+            "imported": "Przemiana — OpenLP"
+        },
+        "Przychodzisz Panie mimo drzwi zamkniętych ((Guanellianie)).xml": {
+            "source": "Przychodzisz Panie mimo drzwi zamkniętych",
+            "imported": "Przychodzisz Panie mimo drzwi zamkniętych — OpenLP"
+        },
+        "Przyjaciela mam (Mate.O).xml": {
+            "source": "Przyjaciela mam",
+            "imported": "Przyjaciela mam — OpenLP"
+        },
+        "Przyjdźcie do stołu miłosierdzia ((Guanellianie)).xml": {
+            "source": "Przyjdźcie do stołu miłosierdzia",
+            "imported": "Przyjdźcie do stołu miłosierdzia — OpenLP"
+        },
+        "Przyjdź i zajmij miejsce swe ((Guanellianie)).xml": {
+            "source": "Przyjdź i zajmij miejsce swe",
+            "imported": "Przyjdź i zajmij miejsce swe — OpenLP"
+        },
+        "Przyjdź jak deszcz (TGD).xml": {
+            "source": "Przyjdź jak deszcz",
+            "imported": "Przyjdź jak deszcz — OpenLP"
+        },
+        "Przyjmij Panie dzisiaj nasze dary ((Guanellianie)).xml": {
+            "source": "Przyjmij Panie dzisiaj nasze dary",
+            "imported": "Przyjmij Panie dzisiaj nasze dary — OpenLP"
+        },
+        "Psalm 126 ((Guanellianie)).xml": {
+            "source": "Psalm 126",
+            "imported": "Psalm 126 — OpenLP"
+        },
+        "Pójdźmy wszyscy do stajenki (Kolęda).xml": {
+            "source": "Pójdźmy wszyscy do stajenki",
+            "imported": "Pójdźmy wszyscy do stajenki — wersja 2"
+        },
+        "Raduje się dusza ma (Mocni w Duchu).xml": {
+            "source": "Raduje się dusza ma",
+            "imported": "Raduje się dusza ma — OpenLP"
+        },
+        "Rozpięty na ramionach ((Guanellianie)).xml": {
+            "source": "Rozpięty na ramionach",
+            "imported": "Rozpięty na ramionach — OpenLP"
+        },
+        "Schowaj mnie ((Guanellianie)).xml": {
+            "source": "Schowaj mnie",
+            "imported": "Schowaj mnie — OpenLP"
+        },
+        "Serce Sługi ((Guanellianie)).xml": {
+            "source": "Serce Sługi",
+            "imported": "Serce Sługi — OpenLP"
+        },
+        "Serce wielkie nam daj ((Guanellianie)).xml": {
+            "source": "Serce wielkie nam daj",
+            "imported": "Serce wielkie nam daj — OpenLP"
+        },
+        "Serdeczna Matko ((Guanellianie)).xml": {
+            "source": "Serdeczna Matko",
+            "imported": "Serdeczna Matko — OpenLP"
+        },
+        "Siedem ((Guanellianie)).xml": {
+            "source": "Siedem",
+            "imported": "Siedem — OpenLP"
+        },
+        "Sieje je ((Guanellianie)).xml": {
+            "source": "Sieje je",
+            "imported": "Sieje je — OpenLP"
+        },
+        "Sprawiedliwy jesteś Duchu ((Guanellianie)).xml": {
+            "source": "Sprawiedliwy jesteś Duchu",
+            "imported": "Sprawiedliwy jesteś Duchu — OpenLP"
+        },
+        "Stoję dziś (Hillsong).xml": {
+            "source": "Stoję dziś",
+            "imported": "Stoję dziś — OpenLP"
+        },
+        "Taki duży taki mały ((Guanellianie)).xml": {
+            "source": "Taki duży taki mały",
+            "imported": "Taki duży taki mały — OpenLP"
+        },
+        "Tak jak w niebie ((Guanellianie)).xml": {
+            "source": "Tak jak w niebie",
+            "imported": "Tak jak w niebie — OpenLP"
+        },
+        "Tak jest mało czasu ((Guanellianie)).xml": {
+            "source": "Tak jest mało czasu",
+            "imported": "Tak jest mało czasu — OpenLP"
+        },
+        "Tak mnie skrusz (Guanellianie).xml": {
+            "source": "Tak mnie skrusz",
+            "imported": "Tak mnie skrusz — OpenLP"
+        },
+        "Tato (Arka Noego).xml": {
+            "source": "Tato",
+            "imported": "Tato — OpenLP"
+        },
+        "The Blessing ((Guanellianie)).xml": {
+            "source": "The Blessing",
+            "imported": "The Blessing — OpenLP"
+        },
+        "Tobie chwała (Guanellianie).xml": {
+            "source": "Tobie chwała",
+            "imported": "Tobie chwała — OpenLP"
+        },
+        "Tobie Panie zaufałem ((Guanellianie)).xml": {
+            "source": "Tobie Panie zaufałem",
+            "imported": "Tobie Panie zaufałem — OpenLP"
+        },
+        "Tobie ufam ((Guanellianie)).xml": {
+            "source": "Tobie ufam",
+            "imported": "Tobie ufam — OpenLP"
+        },
+        "To co kruche i rozsypane (Hillsong).xml": {
+            "source": "To co kruche i rozsypane",
+            "imported": "To co kruche i rozsypane — OpenLP"
+        },
+        "Twoim jestem (Hillsong).xml": {
+            "source": "Twoim jestem",
+            "imported": "Twoim jestem — OpenLP"
+        },
+        "Ukaż mi Panie Swą twarz ((Guanellianie)).xml": {
+            "source": "Ukaż mi Panie Swą twarz",
+            "imported": "Ukaż mi Panie Swą twarz — OpenLP"
+        },
+        "Ukojenie (TGD)-1.xml": {
+            "source": "Ukojenie",
+            "imported": "Ukojenie — OpenLP"
+        },
+        "U Pana dziś zostawiam troski swe ((Guanellianie)).xml": {
+            "source": "U Pana dziś zostawiam troski swe",
+            "imported": "U Pana dziś zostawiam troski swe — OpenLP"
+        },
+        "Uwielbiajcie Pana ludzkich serc bijące dzwony ((Guanellianie)).xml": {
+            "source": "Uwielbiajcie Pana ludzkich serc bijące dzwony",
+            "imported": "Uwielbiajcie Pana ludzkich serc bijące dzwony — OpenLP"
+        },
+        "Uwielbiajmy Jezusa ((Guanellianie)).xml": {
+            "source": "Uwielbiajmy Jezusa",
+            "imported": "Uwielbiajmy Jezusa — OpenLP"
+        },
+        "Uwielbiam Cię ((Guanellianie)).xml": {
+            "source": "Uwielbiam Cię",
+            "imported": "Uwielbiam Cię — OpenLP"
+        },
+        "Uwielbiam Imię Twoje Panie (Odnowa Sosnowiec).xml": {
+            "source": "Uwielbiam Imię Twoje Panie",
+            "imported": "Uwielbiam Imię Twoje Panie — OpenLP"
+        },
+        "Wielbić Pana chcę (Guanellianie).xml": {
+            "source": "Wielbić Pana chcę",
+            "imported": "Wielbić Pana chcę — OpenLP"
+        },
+        "W kruszynie chleba ((Guanellianie)).xml": {
+            "source": "W kruszynie chleba",
+            "imported": "W kruszynie chleba — OpenLP"
+        },
+        "Wody nie ugaszą jej (Inny).xml": {
+            "source": "Wody nie ugaszą jej",
+            "imported": "Wody nie ugaszą jej — wersja 2"
+        },
+        "Wspaniały dawco miłości ((Guanellianie)).xml": {
+            "source": "Wspaniały dawco miłości",
+            "imported": "Wspaniały dawco miłości — OpenLP"
+        },
+        "Wspaniałą Matką ((Guanellianie)).xml": {
+            "source": "Wspaniałą Matką",
+            "imported": "Wspaniałą Matką — OpenLP"
+        },
+        "Wszystko mam w Tobie ((Guanellianie)).xml": {
+            "source": "Wszystko mam w Tobie",
+            "imported": "Wszystko mam w Tobie — OpenLP"
+        },
+        "Wszystko mogę w Tym który mnie umacnia ((Guanellianie)).xml": {
+            "source": "Wszystko mogę w Tym który mnie umacnia",
+            "imported": "Wszystko mogę w Tym który mnie umacnia — OpenLP"
+        },
+        "W Tobie jest światło (Odnowa Sosnowiec).xml": {
+            "source": "W Tobie jest światło",
+            "imported": "W Tobie jest światło — OpenLP"
+        },
+        "Wybrał nas Bóg do zbawienia ((Guanellianie)).xml": {
+            "source": "Wybrał nas Bóg do zbawienia",
+            "imported": "Wybrał nas Bóg do zbawienia — OpenLP"
+        },
+        "Wykrzykujcie Bogu ((Guanellianie)).xml": {
+            "source": "Wykrzykujcie Bogu",
+            "imported": "Wykrzykujcie Bogu — OpenLP"
+        },
+        "Wysłuchajcie mego głosu ((Guanellianie)).xml": {
+            "source": "Wysłuchajcie mego głosu",
+            "imported": "Wysłuchajcie mego głosu — OpenLP"
+        },
+        "Wzywam Cię Duchu przyjdź (Guanellianie).xml": {
+            "source": "Wzywam Cię Duchu przyjdź",
+            "imported": "Wzywam Cię Duchu przyjdź — OpenLP"
+        },
+        "Wzywam Cię Duchu przyjdź (Odnowa Sosnowiec).xml": {
+            "source": "Wzywam Cię Duchu przyjdź",
+            "imported": "Wzywam Cię Duchu przyjdź — OpenLP 2"
+        },
+        "Zaufaj Panu już dziś ((Guanellianie)).xml": {
+            "source": "Zaufaj Panu już dziś",
+            "imported": "Zaufaj Panu już dziś — OpenLP"
+        },
+        "Zawsze się radujcie ((Guanellianie)).xml": {
+            "source": "Zawsze się radujcie",
+            "imported": "Zawsze się radujcie — OpenLP"
+        },
+        "Zbawienie przyszło przez krzyż ((Guanellianie)).xml": {
+            "source": "Zbawienie przyszło przez krzyż",
+            "imported": "Zbawienie przyszło przez krzyż — OpenLP"
+        },
+        "Zbliżam się w pokorze ((Guanellianie)).xml": {
+            "source": "Zbliżam się w pokorze",
+            "imported": "Zbliżam się w pokorze — OpenLP"
+        },
+        "Zbudowani na Chrystusie (Guanellianie).xml": {
+            "source": "Zbudowani na Chrystusie",
+            "imported": "Zbudowani na Chrystusie — OpenLP"
+        },
+        "Z dawna Polski Tyś królową ((Guanellianie)).xml": {
+            "source": "Z dawna Polski Tyś królową",
+            "imported": "Z dawna Polski Tyś królową — OpenLP"
+        },
+        "Ześlij deszcz (Guanellianie).xml": {
+            "source": "Ześlij deszcz",
+            "imported": "Ześlij deszcz — OpenLP"
+        },
+        "Ziemia (Autor nieznany).xml": {
+            "source": "Ziemia",
+            "imported": "Ziemia — OpenLP"
+        },
+        "Zmartwychwstał Pan ((Guanellianie)).xml": {
+            "source": "Zmartwychwstał Pan",
+            "imported": "Zmartwychwstał Pan — OpenLP"
+        },
+        "Z rąk kapłańskich ((Guanellianie)).xml": {
+            "source": "Z rąk kapłańskich",
+            "imported": "Z rąk kapłańskich — OpenLP"
+        },
+        "Złożyłem w Panu całą nadzieję (Odnowa Sosnowiec).xml": {
+            "source": "Złożyłem w Panu całą nadzieję",
+            "imported": "Złożyłem w Panu całą nadzieję — OpenLP"
+        },
+        "Łaski Cud (Grace to Grace) (Guanellianie).xml": {
+            "source": "Łaski Cud (Grace to Grace)",
+            "imported": "Łaski Cud (Grace to Grace) — OpenLP"
+        },
+        "Łaską jesteśmy zbawieni ((Guanellianie)).xml": {
+            "source": "Łaską jesteśmy zbawieni",
+            "imported": "Łaską jesteśmy zbawieni — OpenLP"
+        },
+        "Święte Imię Jezus (Deus Meus).xml": {
+            "source": "Święte Imię Jezus",
+            "imported": "Święte Imię Jezus — OpenLP"
+        },
+        "Święty Święty Święty ((Guanellianie)).xml": {
+            "source": "Święty Święty Święty",
+            "imported": "Święty Święty Święty — OpenLP"
+        }
+    },
+    "repeated_source_titles": {
+        "dziękuję": 3,
+        "boże twa łaska": 2,
+        "chcę wywyższać imię twe": 2,
+        "chwalę ciebie panie": 2,
+        "chwała bogu ojcu": 2,
+        "jesteś królem": 2,
+        "jezus chrystus moim panem jest": 2,
+        "miłość ukryta jest": 2,
+        "nasz bóg jest wielki": 2,
+        "nie było miejsca dla ciebie": 2,
+        "ofiaruję panie ci": 2,
+        "pójdźmy wszyscy do stajenki": 2,
+        "wody nie ugaszą jej": 2,
+        "wzywam cię duchu przyjdź": 2
+    }
+}

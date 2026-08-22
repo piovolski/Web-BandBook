@@ -48,11 +48,11 @@ expectSame('admin', $repo->authenticate('admin', 'bardzo-dlugie-haslo')['usernam
 
 $import = $repo->seedSongbook();
 $songs = $repo->songs();
-expectSame(257, $import['imported'], 'import pełnego śpiewnika');
-expectSame(257, count($songs), 'załadowanie 257 pozycji śpiewnika');
+expectSame(889, $import['imported'], 'import pełnej biblioteki Google i OpenLP');
+expectSame(889, count($songs), 'załadowanie 889 pozycji biblioteki');
 $secondImport = $repo->seedSongbook();
 expectSame(0, $secondImport['imported'], 'ponowny import nie tworzy duplikatów');
-expectSame(257, $secondImport['skipped'], 'ponowny import pomija istniejące tytuły');
+expectSame(889, $secondImport['skipped'], 'ponowny import pomija istniejące tytuły');
 
 $eventId = $repo->saveEvent(null, [
     'name' => 'Próba testowa',
