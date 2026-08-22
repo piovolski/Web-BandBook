@@ -305,8 +305,12 @@
     const repertoireCount = $('[data-repertoire-count]', root);
     const repertoireEmpty = $('[data-repertoire-empty]', root);
     const storageKey = `bandbook-browser:${root.dataset.addApi}`;
+    const batchSize = 60;
     let selectedCategory = 'all';
     let selectedSongId = null;
+    let visibleLimit = batchSize;
+    let loadObserver = null;
+    let loadingMore = false;
 
     const normalize = value => String(value || '')
       .toLocaleLowerCase('pl')
@@ -352,25 +356,55 @@
       return filtered;
     };
 
-    const renderResults = () => {
+    const songRow = song => {
+      const categories = (song.categories || []).filter(item => item.group !== 'source').slice(0, 2);
+      const used = Number(song.event_uses) > 0 ? `<span class="browser-used">W repertuarze${song.event_uses > 1 ? ` ×${song.event_uses}` : ''}</span>` : '';
+      const selected = Number(song.id) === Number(selectedSongId) ? 'selected' : '';
+      const firstLine = String(song.first_lyrics || '').split(/\r?\n/).find(Boolean) || 'Brak podglądu tekstu';
+      return `<article class="browser-song-row ${selected}" data-browser-song-row="${song.id}">
+        <button class="browser-song-open" type="button" data-preview-song="${song.id}">
+          <span class="browser-song-key">${escapeHtml(song.source_key || '—')}</span>
+          <span class="browser-song-copy"><strong>${escapeHtml(song.title)}</strong><small>${escapeHtml(song.authors || song.alt_title || firstLine)}</small><span class="browser-tags">${categories.map(item => `<i>${escapeHtml(item.name)}</i>`).join('')}${song.has_chords ? '<i class="has-chords">chwyty</i>' : '<i>tekst</i>'}${used}</span></span>
+        </button>
+        <button class="quick-add" type="button" data-add-song="${song.id}" title="Dodaj do repertuaru">+</button>
+      </article>`;
+    };
+
+    const loadNextBatch = () => {
+      if (loadingMore) return;
+      const total = filteredSongs().length;
+      if (visibleLimit >= total) return;
+      loadingMore = true;
+      visibleLimit = Math.min(visibleLimit + batchSize, total);
+      renderResults({preserveScroll: true});
+      requestAnimationFrame(() => { loadingMore = false; });
+    };
+
+    const observeListEnd = () => {
+      loadObserver?.disconnect();
+      const sentinel = $('[data-browser-load-sentinel]', results);
+      if (!sentinel || !('IntersectionObserver' in window)) return;
+      loadObserver = new IntersectionObserver(entries => {
+        if (entries.some(entry => entry.isIntersecting)) loadNextBatch();
+      }, {root: results, rootMargin: '320px 0px'});
+      loadObserver.observe(sentinel);
+    };
+
+    const renderResults = ({reset = false, preserveScroll = true} = {}) => {
+      const previousScroll = results.scrollTop;
+      if (reset) visibleLimit = batchSize;
       const filtered = filteredSongs();
-      const visible = filtered.slice(0, 80);
+      const visible = filtered.slice(0, visibleLimit);
+      const hasMore = visible.length < filtered.length;
       resultCount.textContent = filtered.length === 1 ? '1 pieśń' : `${filtered.length} pieśni`;
-      results.innerHTML = visible.length ? visible.map(song => {
-        const categories = (song.categories || []).filter(item => item.group !== 'source').slice(0, 2);
-        const used = Number(song.event_uses) > 0 ? `<span class="browser-used">W repertuarze${song.event_uses > 1 ? ` ×${song.event_uses}` : ''}</span>` : '';
-        const selected = Number(song.id) === Number(selectedSongId) ? 'selected' : '';
-        const firstLine = String(song.first_lyrics || '').split(/\r?\n/).find(Boolean) || 'Brak podglądu tekstu';
-        return `<article class="browser-song-row ${selected}" data-browser-song-row="${song.id}">
-          <button class="browser-song-open" type="button" data-preview-song="${song.id}">
-            <span class="browser-song-key">${escapeHtml(song.source_key || '—')}</span>
-            <span class="browser-song-copy"><strong>${escapeHtml(song.title)}</strong><small>${escapeHtml(song.authors || song.alt_title || firstLine)}</small><span class="browser-tags">${categories.map(item => `<i>${escapeHtml(item.name)}</i>`).join('')}${song.has_chords ? '<i class="has-chords">chwyty</i>' : '<i>tekst</i>'}${used}</span></span>
-          </button>
-          <button class="quick-add" type="button" data-add-song="${song.id}" title="Dodaj do repertuaru">+</button>
-        </article>`;
-      }).join('') : '<div class="browser-empty"><span>⌕</span><h3>Brak wyników</h3><p>Zmień kategorię lub wpisz inne słowo.</p></div>';
-      more.hidden = filtered.length <= visible.length;
-      more.textContent = filtered.length > visible.length ? `Pokazano pierwsze ${visible.length} z ${filtered.length} wyników. Zawęź wyszukiwanie.` : '';
+      results.innerHTML = visible.length
+        ? visible.map(songRow).join('') + (hasMore ? '<div class="browser-load-sentinel" data-browser-load-sentinel><span>◌</span> Wczytuję kolejne pieśni…</div>' : '')
+        : '<div class="browser-empty"><span>⌕</span><h3>Brak wyników</h3><p>Zmień kategorię lub wpisz inne słowo.</p></div>';
+      if (reset) results.scrollTop = 0;
+      else if (preserveScroll) results.scrollTop = previousScroll;
+      more.hidden = !hasMore;
+      more.textContent = hasMore ? `Wyświetlono ${visible.length} z ${filtered.length} · przewiń w dół, aby wczytać kolejne` : '';
+      observeListEnd();
       try { sessionStorage.setItem(storageKey, JSON.stringify({query: search.value, category: selectedCategory})); } catch {}
     };
 
@@ -463,7 +497,7 @@
       if (category) {
         selectedCategory = category.dataset.category;
         $$('[data-category]', root).forEach(button => button.classList.toggle('active', button === category));
-        renderResults();
+        renderResults({reset: true, preserveScroll: false});
         return;
       }
       const open = event.target.closest('[data-preview-song]');
@@ -471,14 +505,17 @@
       const add = event.target.closest('[data-add-song]');
       if (add) addSong(add.dataset.addSong, add);
     });
-    search.addEventListener('input', renderResults);
+    search.addEventListener('input', () => renderResults({reset: true, preserveScroll: false}));
+    results.addEventListener('scroll', () => {
+      if (results.scrollTop + results.clientHeight >= results.scrollHeight - 320) loadNextBatch();
+    }, {passive: true});
     const savedCategory = $(`[data-category="${CSS.escape(selectedCategory)}"]`, root);
     if (savedCategory) {
       $$('[data-category]', root).forEach(button => button.classList.toggle('active', button === savedCategory));
     } else {
       selectedCategory = 'all';
     }
-    renderResults();
+    renderResults({reset: true, preserveScroll: false});
   }
 
   const liveApp = $('[data-live-app]');

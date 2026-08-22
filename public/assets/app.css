@@ -260,6 +260,8 @@ textarea { resize: vertical; }
 .browser-empty h3, .preview-placeholder h3 { margin: 10px 0 0; }
 .browser-empty p, .preview-placeholder p { margin: 5px 0 0; }
 .browser-more { padding: 10px 14px; color: var(--muted); background: #f5f6f2; font-size: .68rem; text-align: center; }
+.browser-load-sentinel { display: flex; align-items: center; justify-content: center; min-height: 52px; gap: 7px; color: var(--muted); background: #f9faf7; font-size: .7rem; }
+.browser-load-sentinel span { display: inline-block; color: var(--forest); font-size: 1rem; animation: preview-spin 1s linear infinite; }
 .song-preview { min-width: 0; max-height: 76vh; overflow-y: auto; background: #fcfcf9; }
 .preview-head { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 12px; padding: 18px; border-bottom: 1px solid var(--line); }
 .preview-head h2, .preview-head p { margin: 0; }

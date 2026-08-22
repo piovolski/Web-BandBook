@@ -59,7 +59,7 @@ $groupLabels = [
             <div class="browser-content">
                 <div class="browser-result-head"><strong data-browser-result-count>Pieśni</strong><span>Kliknij tytuł, aby zobaczyć tekst i formę</span></div>
                 <div class="browser-results" data-browser-results></div>
-                <div class="browser-more" data-browser-more hidden></div>
+                <div class="browser-more" data-browser-more role="status" aria-live="polite" hidden></div>
             </div>
 
             <aside class="song-preview" data-song-preview>
