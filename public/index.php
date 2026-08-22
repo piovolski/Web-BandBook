@@ -134,7 +134,8 @@ try {
                 $song = array_merge($song ?: [], $_POST);
             }
         }
-        View::render('songs/editor', compact('song', 'error') + ['title' => $id ? 'Edycja pieśni' : 'Nowa pieśń', 'active' => 'songs']);
+        $categories = $repo->categories(true);
+        View::render('songs/editor', compact('song', 'error', 'categories') + ['title' => $id ? 'Edycja pieśni' : 'Nowa pieśń', 'active' => 'songs']);
         exit;
     }
 

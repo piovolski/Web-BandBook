@@ -79,16 +79,17 @@ final class Repository
         )->fetchAll();
     }
 
-    public function categories(): array
+    public function categories(bool $includeEmpty = false): array
     {
+        $having = $includeEmpty ? '' : 'HAVING COUNT(s.id) > 0';
         return $this->db->query(
-            'SELECT c.*, COUNT(s.id) AS song_count
+            "SELECT c.*, COUNT(s.id) AS song_count
              FROM categories c
              LEFT JOIN song_categories sc ON sc.category_id = c.id
              LEFT JOIN songs s ON s.id = sc.song_id AND s.archived = 0
              GROUP BY c.id
-             HAVING COUNT(s.id) > 0
-             ORDER BY c.group_name, c.sort_order, c.name'
+             {$having}
+             ORDER BY c.group_name, c.sort_order, c.name"
         )->fetchAll();
     }
 
@@ -182,6 +183,16 @@ final class Repository
         );
         $form->execute([$id]);
         $song['form'] = $form->fetchAll();
+
+        $categories = $this->db->prepare(
+            'SELECT c.id, c.name, c.group_name, sc.position
+             FROM song_categories sc
+             JOIN categories c ON c.id = sc.category_id
+             WHERE sc.song_id = ?
+             ORDER BY c.group_name, c.sort_order, sc.position, c.name'
+        );
+        $categories->execute([$id]);
+        $song['categories'] = $categories->fetchAll();
         return $song;
     }
 
@@ -311,6 +322,15 @@ final class Repository
                 foreach ($keptIds as $position => $sectionId) {
                     $insertForm->execute([$id, $sectionId, $position, 0, null]);
                 }
+            }
+
+            if (!empty($data['categories_present'])) {
+                $categoryIds = $data['category_ids'] ?? [];
+                $this->syncSongCategories(
+                    $id,
+                    is_array($categoryIds) ? $categoryIds : [$categoryIds],
+                    (string) ($data['new_categories'] ?? '')
+                );
             }
 
             $this->log('song', $id, $data['id'] ?? null ? 'updated' : 'created');
@@ -931,6 +951,77 @@ final class Repository
             $positionStatement->execute([$categoryId]);
             $insert = $this->db->prepare('INSERT INTO song_categories (song_id, category_id, position) VALUES (?, ?, ?)');
             $insert->execute([$songId, $categoryId, (int) $positionStatement->fetchColumn()]);
+        }
+    }
+
+    private function syncSongCategories(int $songId, array $requestedIds, string $newCategoryNames): void
+    {
+        $editableRows = $this->db->query(
+            "SELECT id FROM categories WHERE group_name NOT IN ('source', 'songbook')"
+        )->fetchAll(PDO::FETCH_COLUMN);
+        $editableIds = array_map('intval', $editableRows);
+        $selectedIds = [];
+        foreach ($requestedIds as $requestedId) {
+            $categoryId = (int) $requestedId;
+            if ($categoryId > 0 && in_array($categoryId, $editableIds, true)) {
+                $selectedIds[$categoryId] = $categoryId;
+            }
+        }
+
+        $names = preg_split('/[\r\n,;]+/u', $newCategoryNames) ?: [];
+        foreach ($names as $rawName) {
+            $name = trim($rawName);
+            if ($name === '') {
+                continue;
+            }
+            $length = function_exists('mb_strlen') ? mb_strlen($name) : strlen($name);
+            if ($length > 180) {
+                throw new RuntimeException('Nazwa kategorii może mieć maksymalnie 180 znaków.');
+            }
+
+            $lookup = $this->db->prepare('SELECT id, group_name FROM categories WHERE name = ? ORDER BY id LIMIT 1');
+            $lookup->execute([$name]);
+            $existing = $lookup->fetch();
+            if ($existing) {
+                if (in_array($existing['group_name'], ['source', 'songbook'], true)) {
+                    throw new RuntimeException('Nazwa „' . $name . '” jest zarezerwowana dla metadanych importu.');
+                }
+                $categoryId = (int) $existing['id'];
+            } else {
+                $categoryId = $this->ensureCategory($name, 'custom', 0);
+                $editableIds[] = $categoryId;
+            }
+            $selectedIds[$categoryId] = $categoryId;
+        }
+
+        $positions = $this->db->prepare('SELECT category_id, position FROM song_categories WHERE song_id = ?');
+        $positions->execute([$songId]);
+        $existingPositions = [];
+        foreach ($positions->fetchAll() as $position) {
+            $existingPositions[(int) $position['category_id']] = (int) $position['position'];
+        }
+
+        $delete = $this->db->prepare(
+            "DELETE FROM song_categories
+             WHERE song_id = ? AND category_id IN (
+                 SELECT id FROM categories WHERE group_name NOT IN ('source', 'songbook')
+             )"
+        );
+        $delete->execute([$songId]);
+
+        $nextPosition = $this->db->prepare(
+            'SELECT COALESCE(MAX(position), -1) + 1 FROM song_categories WHERE category_id = ?'
+        );
+        $insert = $this->db->prepare(
+            'INSERT INTO song_categories (song_id, category_id, position) VALUES (?, ?, ?)'
+        );
+        foreach ($selectedIds as $categoryId) {
+            $position = $existingPositions[$categoryId] ?? null;
+            if ($position === null) {
+                $nextPosition->execute([$categoryId]);
+                $position = (int) $nextPosition->fetchColumn();
+            }
+            $insert->execute([$songId, $categoryId, $position]);
         }
     }
 

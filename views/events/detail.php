@@ -13,6 +13,7 @@ $groupLabels = [
     'liturgical_moment' => 'Moment liturgii',
     'season' => 'Okres liturgiczny',
     'theme' => 'Temat',
+    'custom' => 'Własne kategorie',
 ];
 ?>
 <section class="event-hero">

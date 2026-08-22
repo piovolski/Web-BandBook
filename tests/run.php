@@ -72,6 +72,58 @@ expectSame('Śpiewem radujmy innych', $sunrise['categories'][0]['name'] ?? null,
 $sunrisePreview = $repo->songPreview((int) ($sunrise['id'] ?? 0));
 expectSame(11, count($sunrisePreview['form'] ?? []), 'podgląd zachowuje pełną domyślną formę');
 
+$wielkiPostCategory = array_values(array_filter(
+    $categories,
+    fn (array $category): bool => $category['name'] === 'Wielki Post'
+))[0] ?? null;
+$sunriseSong = $repo->song((int) $sunrise['id']);
+$sunriseSections = array_map(
+    fn (array $section): array => [
+        'id' => (int) $section['id'],
+        'key' => 'id-' . $section['id'],
+        'type' => $section['type'],
+        'label' => $section['label'],
+        'lyrics' => $section['lyrics'],
+        'chords' => $section['chords'],
+        'comment' => $section['comment'] ?? '',
+    ],
+    $sunriseSong['sections']
+);
+$sunriseForm = array_map(
+    fn (array $item): array => [
+        'sectionKey' => 'id-' . $item['section_id'],
+        'transpose' => (int) $item['transpose_steps'],
+        'comment' => $item['comment'] ?? '',
+    ],
+    $sunriseSong['form']
+);
+$repo->saveSong((int) $sunriseSong['id'], [
+    'id' => (int) $sunriseSong['id'],
+    'title' => $sunriseSong['title'],
+    'alt_title' => $sunriseSong['alt_title'],
+    'source_key' => $sunriseSong['source_key'],
+    'bpm' => $sunriseSong['bpm'],
+    'meter' => $sunriseSong['meter'],
+    'comment' => $sunriseSong['comment'],
+    'notation_profile' => $sunriseSong['notation_profile'],
+    'sections_json' => json_encode($sunriseSections, JSON_THROW_ON_ERROR),
+    'form_json' => json_encode($sunriseForm, JSON_THROW_ON_ERROR),
+    'categories_present' => '1',
+    'category_ids' => [(int) $wielkiPostCategory['id']],
+    'new_categories' => 'Próby zespołu',
+]);
+$sunriseAfterCategoryEdit = $repo->song((int) $sunriseSong['id']);
+$sunriseCategoryNames = array_column($sunriseAfterCategoryEdit['categories'], 'name');
+expectSame(true, in_array('Wielki Post', $sunriseCategoryNames, true), 'zmiana działu pieśni w edytorze');
+expectSame(true, in_array('Próby zespołu', $sunriseCategoryNames, true), 'utworzenie i przypisanie własnej kategorii');
+expectSame(false, in_array('Śpiewem radujmy innych', $sunriseCategoryNames, true), 'usunięcie poprzedniego działu pieśni');
+expectSame(true, in_array('Śpiewnik guanelliański', $sunriseCategoryNames, true), 'ochrona kategorii źródłowej podczas zapisu');
+$customCategory = array_values(array_filter(
+    $repo->categories(true),
+    fn (array $category): bool => $category['name'] === 'Próby zespołu' && $category['group_name'] === 'custom'
+))[0] ?? null;
+expectSame(1, (int) ($customCategory['song_count'] ?? 0), 'własna kategoria jest dostępna w filtrach repertuaru');
+
 $eventId = $repo->saveEvent(null, [
     'name' => 'Próba testowa',
     'planned_at' => '2026-08-23T18:00',

@@ -12,6 +12,26 @@ $formPayload = [];
 foreach (($song['form'] ?? []) as $item) {
     $formPayload[] = ['sectionKey' => 'id-' . $item['section_id'], 'transpose' => (int) $item['transpose_steps'], 'comment' => $item['comment'] ?? ''];
 }
+$categoryLabels = [
+    'section' => 'Działy guanelliańskie',
+    'liturgical_moment' => 'Moment liturgii',
+    'season' => 'Okres liturgiczny',
+    'theme' => 'Temat',
+    'custom' => 'Własne kategorie',
+];
+$categoryGroups = [];
+foreach (($categories ?? []) as $category) {
+    if (!in_array($category['group_name'], ['source', 'songbook'], true)) {
+        $categoryGroups[$category['group_name']][] = $category;
+    }
+}
+$selectedCategoryIds = !empty($song['categories_present'])
+    ? array_map('intval', (array) ($song['category_ids'] ?? []))
+    : array_map('intval', array_column($song['categories'] ?? [], 'id'));
+$protectedCategories = array_values(array_filter(
+    $song['categories'] ?? [],
+    fn (array $category): bool => in_array($category['group_name'], ['source', 'songbook'], true)
+));
 ?>
 <section class="page-heading compact-heading">
     <div><a class="back-link" href="<?= e(url('songs')) ?>">← Biblioteka</a><p class="eyebrow"><?= $isEdit ? 'Edycja pieśni' : 'Nowa pieśń' ?></p><h1><?= e($song['title'] ?? 'Bez tytułu') ?></h1></div>
@@ -42,12 +62,33 @@ foreach (($song['form'] ?? []) as $item) {
         </article>
 
         <article class="panel">
-            <div class="panel-heading"><div><span class="step-number">2</span><div><h2>Części pieśni</h2><p>Każda linia tekstu odpowiada tej samej linii chwytów.</p></div></div><button class="button button-soft" type="button" data-add-section>+ Dodaj część</button></div>
+            <div class="panel-heading"><div><span class="step-number">2</span><div><h2>Kategorie</h2><p>Pieśń może należeć do kilku działów i własnych kategorii.</p></div></div></div>
+            <input type="hidden" name="categories_present" value="1">
+            <div class="category-editor-groups">
+                <?php foreach ($categoryGroups as $group => $items): ?>
+                    <fieldset class="category-editor-group">
+                        <legend><?= e($categoryLabels[$group] ?? $group) ?></legend>
+                        <div class="category-checks">
+                            <?php foreach ($items as $category): ?>
+                                <label class="category-check"><input type="checkbox" name="category_ids[]" value="<?= (int) $category['id'] ?>" <?= in_array((int) $category['id'], $selectedCategoryIds, true) ? 'checked' : '' ?>><span><?= e($category['name']) ?></span><small><?= (int) $category['song_count'] ?></small></label>
+                            <?php endforeach; ?>
+                        </div>
+                    </fieldset>
+                <?php endforeach; ?>
+                <label class="new-category-field">Dodaj własne kategorie<input name="new_categories" value="<?= e($song['new_categories'] ?? '') ?>" placeholder="Np. Adoracja, ulubione zespołu"><small>Wpisz kilka nazw, rozdzielając je przecinkami.</small></label>
+                <?php if ($protectedCategories): ?>
+                    <div class="protected-categories"><strong>Metadane importu</strong><div><?php foreach ($protectedCategories as $category): ?><span title="Ta kategoria jest chroniona"><?= e($category['name']) ?> 🔒</span><?php endforeach; ?></div><small>Źródło i śpiewnik są zachowywane automatycznie i nie można ich tutaj usunąć.</small></div>
+                <?php endif; ?>
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-heading"><div><span class="step-number">3</span><div><h2>Części pieśni</h2><p>Każda linia tekstu odpowiada tej samej linii chwytów.</p></div></div><button class="button button-soft" type="button" data-add-section>+ Dodaj część</button></div>
             <div class="sections-editor" data-sections-container></div>
         </article>
 
         <article class="panel">
-            <div class="panel-heading"><div><span class="step-number">3</span><div><h2>Forma domyślna</h2><p>Dodawaj części wielokrotnie i ustawiaj ich kolejność.</p></div></div></div>
+            <div class="panel-heading"><div><span class="step-number">4</span><div><h2>Forma domyślna</h2><p>Dodawaj części wielokrotnie i ustawiaj ich kolejność.</p></div></div></div>
             <div class="form-builder">
                 <div class="form-palette" data-form-palette></div>
                 <div class="form-sequence" data-form-sequence></div>
