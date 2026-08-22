@@ -30,6 +30,7 @@ $groupLabels = [
 <div class="planner-layout" data-song-browser
      data-preview-api="<?= e(url('api-song-preview')) ?>"
      data-add-api="<?= e(url('api-event-song-add', ['id' => $event['id']])) ?>"
+     data-reorder-api="<?= e(url('api-event-song-reorder', ['id' => $event['id']])) ?>"
      data-song-edit-url="<?= e(url('song-edit')) ?>"
      data-csrf="<?= e(csrf_token()) ?>">
     <section class="song-browser-panel">
@@ -71,7 +72,7 @@ $groupLabels = [
 
     <aside class="planner-sidebar">
         <section class="panel repertoire-panel">
-            <div class="section-heading"><div><p class="eyebrow">Kolejność</p><h2>Repertuar</h2></div><span class="count-badge" data-repertoire-count><?= count($event['songs']) ?></span></div>
+            <div class="section-heading"><div><p class="eyebrow">Kolejność</p><h2>Repertuar</h2><p class="repertoire-order-hint">Przeciągnij za uchwyt lub użyj strzałek.</p></div><span class="count-badge" data-repertoire-count><?= count($event['songs']) ?></span></div>
             <div class="empty-state compact" data-repertoire-empty <?= $event['songs'] ? 'hidden' : '' ?>><span class="empty-icon">+</span><h3>Dodaj pierwszą pieśń</h3><p>Wybierz ją z przeglądarki.</p></div>
             <div class="repertoire-list" data-repertoire-list>
                 <?php $total = count($event['songs']); ?>

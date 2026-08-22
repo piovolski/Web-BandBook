@@ -1,4 +1,5 @@
 <article class="repertoire-item" data-repertoire-item data-event-song-id="<?= (int) $song['id'] ?>">
+    <span class="repertoire-drag-handle" data-repertoire-drag role="button" tabindex="0" title="Przeciągnij, aby zmienić kolejność" aria-label="Przeciągnij pieśń <?= e($song['title']) ?>, aby zmienić jej kolejność">⠿</span>
     <span class="repertoire-number"><?= $index + 1 ?></span>
     <div class="repertoire-copy">
         <h3><a href="<?= e(url('event-song-edit', ['id' => $song['id']])) ?>"><?= e($song['title']) ?></a></h3>

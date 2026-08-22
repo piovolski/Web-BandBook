@@ -9,7 +9,7 @@ BandBook to samodzielna aplikacja PHP dla zespołu muzycznego. Pozwala zarządza
 - domyślna forma pieśni z wielokrotnym użyciem tej samej części;
 - polska notacja `H/B` z małymi akordami molowymi oraz notacja `B/Bb` z końcówką `m`;
 - transpozycja całej pieśni i każdego wystąpienia części;
-- wydarzenia, komentarze, tempo, kolejność repertuaru i formy wydarzeniowe;
+- wydarzenia, komentarze, tempo, kolejność repertuaru zmieniana przeciąganiem lub strzałkami i formy wydarzeniowe;
 - edycja nazwy, tekstu i chwytów pojedynczego wystąpienia części bez zmiany pieśni źródłowej;
 - pełny edytor pieśni dostępny z podglądu przed dodaniem, repertuaru oraz z ukrytego menu narzędzi w Live;
 - przeglądarka doboru repertuaru z wyszukiwaniem po tytule, tekście, autorze i kategorii oraz automatycznym doczytywaniem wyników podczas przewijania;

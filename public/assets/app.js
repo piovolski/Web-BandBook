@@ -462,6 +462,52 @@
       setTimeout(() => node.remove(), 2200);
     };
 
+    const repertoireOrder = () => $$('[data-repertoire-item]', repertoire)
+      .map(item => Number(item.dataset.eventSongId));
+    const sameOrder = (left, right) => left.length === right.length
+      && left.every((id, index) => id === right[index]);
+    const restoreRepertoireOrder = order => {
+      const items = new Map($$('[data-repertoire-item]', repertoire)
+        .map(item => [Number(item.dataset.eventSongId), item]));
+      order.forEach(id => {
+        const item = items.get(Number(id));
+        if (item) repertoire.append(item);
+      });
+      refreshRepertoireControls();
+    };
+    let dragState = null;
+    let reorderBusy = false;
+
+    const clearDragState = () => {
+      repertoire.classList.remove('is-reordering');
+      $$('[data-repertoire-item]', repertoire).forEach(item => item.classList.remove('is-dragging'));
+    };
+
+    const saveRepertoireOrder = async previousOrder => {
+      const nextOrder = repertoireOrder();
+      if (sameOrder(previousOrder, nextOrder)) return;
+      reorderBusy = true;
+      repertoire.classList.add('is-saving');
+      repertoire.setAttribute('aria-busy', 'true');
+      try {
+        const response = await fetch(root.dataset.reorderApi, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'X-CSRF-Token': root.dataset.csrf},
+          body: JSON.stringify({event_song_ids: nextOrder}),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Nie udało się zapisać kolejności.');
+        notify('Kolejność repertuaru została zapisana.');
+      } catch (error) {
+        restoreRepertoireOrder(previousOrder);
+        window.alert(error.message || 'Nie udało się zapisać kolejności repertuaru.');
+      } finally {
+        reorderBusy = false;
+        repertoire.classList.remove('is-saving');
+        repertoire.removeAttribute('aria-busy');
+      }
+    };
+
     const addSong = async (songId, button) => {
       const song = songs.find(item => Number(item.id) === Number(songId));
       if (!song) return;
@@ -504,6 +550,60 @@
       if (open) { loadPreview(open.dataset.previewSong); return; }
       const add = event.target.closest('[data-add-song]');
       if (add) addSong(add.dataset.addSong, add);
+    });
+    repertoire.addEventListener('pointerdown', event => {
+      const handle = event.target.closest('[data-repertoire-drag]');
+      const item = handle?.closest('[data-repertoire-item]');
+      if (!item || reorderBusy || event.button !== 0) return;
+      event.preventDefault();
+      dragState = {item, handle, pointerId: event.pointerId, previousOrder: repertoireOrder()};
+      handle.setPointerCapture(event.pointerId);
+      item.classList.add('is-dragging');
+      repertoire.classList.add('is-reordering');
+    });
+    repertoire.addEventListener('pointermove', event => {
+      if (!dragState || event.pointerId !== dragState.pointerId) return;
+      event.preventDefault();
+      const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-repertoire-item]');
+      if (!target || !repertoire.contains(target)) return;
+      if (target === dragState.item) return;
+      const bounds = target.getBoundingClientRect();
+      const after = event.clientY > bounds.top + bounds.height / 2;
+      repertoire.insertBefore(dragState.item, after ? target.nextSibling : target);
+      if (event.clientY < 90) window.scrollBy(0, -14);
+      else if (event.clientY > window.innerHeight - 90) window.scrollBy(0, 14);
+    });
+    repertoire.addEventListener('pointerup', event => {
+      if (!dragState || event.pointerId !== dragState.pointerId) return;
+      event.preventDefault();
+      const previousOrder = dragState.previousOrder;
+      const bounds = repertoire.getBoundingClientRect();
+      const droppedInside = event.clientX >= bounds.left && event.clientX <= bounds.right
+        && event.clientY >= bounds.top && event.clientY <= bounds.bottom;
+      if (dragState.handle.hasPointerCapture(event.pointerId)) dragState.handle.releasePointerCapture(event.pointerId);
+      dragState = null;
+      clearDragState();
+      if (!droppedInside) {
+        restoreRepertoireOrder(previousOrder);
+        return;
+      }
+      refreshRepertoireControls();
+      saveRepertoireOrder(previousOrder);
+    });
+    repertoire.addEventListener('pointercancel', event => {
+      if (!dragState || event.pointerId !== dragState.pointerId) return;
+      const previousOrder = dragState.previousOrder;
+      dragState = null;
+      clearDragState();
+      restoreRepertoireOrder(previousOrder);
+    });
+    repertoire.addEventListener('keydown', event => {
+      const handle = event.target.closest('[data-repertoire-drag]');
+      if (!handle || !['ArrowUp', 'ArrowDown'].includes(event.key)) return;
+      event.preventDefault();
+      const item = handle.closest('[data-repertoire-item]');
+      const moveButton = event.key === 'ArrowUp' ? $('[data-move-up]', item) : $('[data-move-down]', item);
+      if (moveButton && !moveButton.disabled) moveButton.form?.requestSubmit(moveButton);
     });
     search.addEventListener('input', () => renderResults({reset: true, preserveScroll: false}));
     results.addEventListener('scroll', () => {

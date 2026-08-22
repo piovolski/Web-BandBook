@@ -267,6 +267,25 @@ try {
         redirect('event', ['id' => $eventSong['event_id']]);
     }
 
+    if ($route === 'api-event-song-reorder' && $method === 'POST') {
+        verify_csrf();
+        $eventId = (int) ($_GET['id'] ?? 0);
+        if ($repo->event($eventId) === null) {
+            json_response(['error' => 'Nie znaleziono wydarzenia.'], 404);
+        }
+        $payload = request_json();
+        $eventSongIds = $payload['event_song_ids'] ?? null;
+        if (!is_array($eventSongIds)) {
+            json_response(['error' => 'Nieprawidłowa kolejność repertuaru.'], 422);
+        }
+        try {
+            $repo->reorderEventSongs($eventId, $eventSongIds);
+        } catch (RuntimeException $exception) {
+            json_response(['error' => $exception->getMessage()], 422);
+        }
+        json_response(['saved' => true, 'event_song_ids' => array_values(array_map('intval', $eventSongIds))]);
+    }
+
     if ($route === 'event-song-remove' && $method === 'POST') {
         verify_csrf();
         $eventId = $repo->removeEventSong((int) ($_GET['id'] ?? 0));

@@ -590,6 +590,41 @@ final class Repository
         }
     }
 
+    public function reorderEventSongs(int $eventId, array $eventSongIds): void
+    {
+        $orderedIds = array_values(array_map('intval', $eventSongIds));
+        if (count($orderedIds) !== count(array_unique($orderedIds))) {
+            throw new RuntimeException('Kolejność repertuaru zawiera powtórzone pozycje.');
+        }
+
+        $statement = $this->db->prepare('SELECT id FROM event_songs WHERE event_id = ? ORDER BY position, id');
+        $statement->execute([$eventId]);
+        $existingIds = array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN));
+        $expected = $existingIds;
+        $received = $orderedIds;
+        sort($expected, SORT_NUMERIC);
+        sort($received, SORT_NUMERIC);
+        if ($expected !== $received) {
+            throw new RuntimeException('Kolejność nie obejmuje wszystkich pieśni tego repertuaru. Odśwież stronę i spróbuj ponownie.');
+        }
+        if ($orderedIds === $existingIds) {
+            return;
+        }
+
+        $this->db->beginTransaction();
+        try {
+            $update = $this->db->prepare('UPDATE event_songs SET position = ? WHERE id = ? AND event_id = ?');
+            foreach ($orderedIds as $position => $eventSongId) {
+                $update->execute([$position, $eventSongId, $eventId]);
+            }
+            $this->touchEvent($eventId);
+            $this->db->commit();
+        } catch (Throwable $error) {
+            $this->db->rollBack();
+            throw $error;
+        }
+    }
+
     public function removeEventSong(int $eventSongId): int
     {
         $eventSong = $this->eventSong($eventSongId);

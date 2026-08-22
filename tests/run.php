@@ -135,6 +135,24 @@ $eventSongId = $repo->addSongToEvent($eventId, (int) $songs[0]['id']);
 $eventSong = $repo->eventSong($eventSongId);
 expectSame(true, count($eventSong['form']) > 1, 'skopiowanie domyślnej formy do wydarzenia');
 
+$secondRepertoireSongId = $repo->addSongToEvent($eventId, (int) $songs[1]['id']);
+$thirdRepertoireSongId = $repo->addSongToEvent($eventId, (int) $songs[2]['id']);
+$repo->reorderEventSongs($eventId, [$thirdRepertoireSongId, $eventSongId, $secondRepertoireSongId]);
+$reorderedEvent = $repo->event($eventId);
+expectSame(
+    [$thirdRepertoireSongId, $eventSongId, $secondRepertoireSongId],
+    array_map('intval', array_column($reorderedEvent['songs'], 'id')),
+    'zapis pełnej kolejności repertuaru po przeciągnięciu'
+);
+$repo->moveEventSong($eventSongId, -1);
+$movedEvent = $repo->event($eventId);
+expectSame(
+    [$eventSongId, $thirdRepertoireSongId, $secondRepertoireSongId],
+    array_map('intval', array_column($movedEvent['songs'], 'id')),
+    'strzałki kolejności pozostają aktywne'
+);
+$repo->reorderEventSongs($eventId, [$eventSongId, $secondRepertoireSongId, $thirdRepertoireSongId]);
+
 $editedForm = array_map(
     fn (array $item, int $index): array => [
         'sectionId' => (int) $item['section_id'],
