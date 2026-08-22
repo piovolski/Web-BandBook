@@ -342,6 +342,12 @@ textarea { resize: vertical; }
 .live-output-switch button[data-output-mode="blackout"].active { color: #fff; background: #050505; box-shadow: inset 0 -3px #efefef; }
 .live-output-switch button:disabled { opacity: .5; cursor: wait; }
 .live-output-switch kbd { display: grid; min-width: 20px; height: 20px; place-items: center; border: 1px solid currentColor; border-radius: 5px; font: inherit; font-size: .62rem; }
+.live-font-control { display: grid; grid-template-columns: 38px 52px 38px; min-height: 40px; overflow: hidden; border: 1px solid rgba(255,255,255,.22); border-radius: 10px; background: rgba(0,0,0,.18); }
+.live-font-control button, .live-font-control output { display: grid; place-items: center; border: 0; color: rgba(255,255,255,.8); background: transparent; font-size: .72rem; font-weight: 850; }
+.live-font-control button { cursor: pointer; }
+.live-font-control button:hover { color: #fff; background: rgba(255,255,255,.08); }
+.live-font-control button:disabled { opacity: .35; cursor: not-allowed; }
+.live-font-control output { border-right: 1px solid rgba(255,255,255,.14); border-left: 1px solid rgba(255,255,255,.14); color: #fff; }
 .follow-toggle { display: flex; grid-template-columns: auto 1fr; align-items: center; gap: .4rem; color: rgba(255,255,255,.8); }
 .follow-toggle input { width: auto; }
 .live-notation { display: flex; grid-template-columns: auto auto; align-items: center; gap: .45rem; color: rgba(255,255,255,.68); }
@@ -423,7 +429,7 @@ textarea { resize: vertical; }
 .audience-app.mode-text::before { opacity: 1; }
 .audience-app.mode-blackout { background-color: #000; background-image: none !important; }
 .audience-stage { position: relative; z-index: 1; display: grid; width: 100%; height: 100%; place-items: center; padding: clamp(32px, 6vh, 80px) clamp(45px, 7vw, 140px); }
-.projection-text { width: min(1600px, 100%); font-size: clamp(3rem, 6.2vw, 7.4rem); font-weight: 700; line-height: 1.22; letter-spacing: -.025em; text-align: center; text-wrap: balance; text-shadow: 0 3px 18px rgba(0,0,0,.9), 0 1px 3px rgba(0,0,0,.9); }
+.projection-text { width: min(1600px, 100%); font-size: clamp(3rem, 6.2vw, 7.4rem); font-weight: 700; line-height: 1.22; letter-spacing: -.025em; text-align: left; text-wrap: pretty; text-shadow: 0 3px 18px rgba(0,0,0,.9), 0 1px 3px rgba(0,0,0,.9); }
 .projection-text.medium { font-size: clamp(2.6rem, 5.2vw, 6.2rem); }
 .projection-text.compact { font-size: clamp(2.1rem, 4.2vw, 5rem); line-height: 1.16; }
 .projection-line { margin: .08em 0; white-space: pre-wrap; }
@@ -508,6 +514,7 @@ textarea { resize: vertical; }
   .live-header-tools { width: 100%; justify-content: space-between; gap: 7px; }
   .live-output-switch { order: -1; width: 100%; }
   .live-output-switch button { min-width: 0; padding: .45rem .35rem; }
+  .live-font-control { margin-left: auto; }
   .follow-toggle { display: none; }
   .connection { width: 100%; justify-content: flex-end; }
   .live-layout { display: block; }

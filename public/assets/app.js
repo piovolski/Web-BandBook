@@ -631,6 +631,7 @@
     const follow = $('[data-follow-current]', root);
     const notation = $('[data-live-notation]', root);
     const outputSwitch = $('[data-live-output-switch]', root);
+    const fontControl = $('[data-live-font-control]', root);
     const csrf = root.dataset.csrf;
 
     const request = async (url, options = {}) => {
@@ -650,6 +651,12 @@
         const active = button.dataset.outputMode === (snapshot.state.output_mode || 'text');
         button.classList.toggle('active', active);
         button.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      const fontScale = Number(snapshot.state.audience_font_scale || 100);
+      $('[data-font-scale]', fontControl).textContent = `${fontScale}%`;
+      $$('[data-font-scale-delta]', fontControl).forEach(button => {
+        const nextScale = fontScale + Number(button.dataset.fontScaleDelta);
+        button.disabled = nextScale < 60 || nextScale > 160;
       });
       if (follow.checked && snapshot.state.event_song_id) selectedSong = snapshot.state.event_song_id;
       nav.innerHTML = snapshot.songs.length ? snapshot.songs.map((song, index) => {
@@ -743,6 +750,23 @@
       }
     };
 
+    const setAudienceFontScale = async fontScale => {
+      if (busy || fontScale === Number(snapshot.state.audience_font_scale || 100) || fontScale < 60 || fontScale > 160) return;
+      busy = true;
+      $$('[data-font-scale-delta]', fontControl).forEach(button => { button.disabled = true; });
+      try {
+        await request(root.dataset.outputApi, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','X-CSRF-Token':csrf},
+          body: JSON.stringify({font_scale: fontScale}),
+        });
+        snapshot.state.audience_font_scale = fontScale;
+        setConnection(true);
+        render();
+      } catch { setConnection(false); }
+      finally { busy = false; await poll(true); }
+    };
+
     const savePart = async card => {
       const saveToSource = $('[data-live-save-source]', card).checked;
       if (saveToSource && !window.confirm('Zapisać tę część w pieśni źródłowej? Zmiana pojawi się w bibliotece i innych wydarzeniach, które nie mają własnego nadpisania.')) return;
@@ -768,6 +792,12 @@
       const outputMode = event.target.closest('[data-output-mode]');
       if (outputMode) {
         await setOutputMode(outputMode.dataset.outputMode);
+        return;
+      }
+      const fontScaleButton = event.target.closest('[data-font-scale-delta]');
+      if (fontScaleButton) {
+        const currentScale = Number(snapshot.state.audience_font_scale || 100);
+        await setAudienceFontScale(currentScale + Number(fontScaleButton.dataset.fontScaleDelta));
         return;
       }
       const select = event.target.closest('[data-select-song]');
@@ -873,7 +903,10 @@
         const lines = String(current.item.lyrics || '').split(/\r?\n/);
         const visibleLines = lines.filter(line => line.trim() !== '').length;
         const sizeClass = visibleLines > 8 ? 'compact' : (visibleLines > 5 ? 'medium' : 'large');
-        stage.innerHTML = `<div class="projection-text ${sizeClass}">${lines.map(line => `<p class="projection-line">${escapeHtml(line) || '&nbsp;'}</p>`).join('')}</div>`;
+        const scale = Math.min(160, Math.max(60, Number(snapshot.state.audience_font_scale || 100))) / 100;
+        const sizes = sizeClass === 'compact' ? [2.1, 4.2, 5] : (sizeClass === 'medium' ? [2.6, 5.2, 6.2] : [3, 6.2, 7.4]);
+        const fontSize = `clamp(${(sizes[0] * scale).toFixed(2)}rem, ${(sizes[1] * scale).toFixed(2)}vw, ${(sizes[2] * scale).toFixed(2)}rem)`;
+        stage.innerHTML = `<div class="projection-text ${sizeClass}" style="font-size:${fontSize}">${lines.map(line => `<p class="projection-line">${escapeHtml(line) || '&nbsp;'}</p>`).join('')}</div>`;
       } else {
         stage.innerHTML = '';
       }

@@ -192,6 +192,7 @@ $snapshot = $repo->liveSnapshot($eventId, 'pl');
 $firstFormId = (int) $snapshot['songs'][0]['form'][0]['id'];
 expectSame('test-background.jpg', $snapshot['event']['background_image'], 'tło wydarzenia trafia do widoku projekcyjnego');
 expectSame('text', $snapshot['state']['output_mode'], 'nowe wydarzenie domyślnie pokazuje tekst');
+expectSame(100, $snapshot['state']['audience_font_scale'], 'nowe wydarzenie ma domyślną wielkość tekstu uczestników');
 expectSame('Zwrotka próbna', $snapshot['songs'][0]['form'][0]['label'], 'nadpisana część trafia do widoku live');
 $first = $repo->directLive($eventId, $firstFormId, $adminId);
 expectSame('next', $first['action'], 'pierwsze kliknięcie ustawia następną część');
@@ -203,6 +204,8 @@ $repo->setAudienceMode($eventId, 'background', $adminId);
 expectSame('background', $repo->liveSnapshot($eventId, 'pl')['state']['output_mode'], 'tryb samego tła synchronizuje się z projekcją');
 $repo->setAudienceMode($eventId, 'text', $adminId);
 expectSame('text', $repo->liveSnapshot($eventId, 'pl')['state']['output_mode'], 'tryb tekstu synchronizuje się z projekcją');
+$repo->setAudienceFontScale($eventId, 130, $adminId);
+expectSame(130, $repo->liveSnapshot($eventId, 'pl')['state']['audience_font_scale'], 'wielkość tekstu synchronizuje się z projekcją');
 
 $repo->updateLivePartContent($eventId, $firstFormId, [
     'label' => 'Refren z Live',

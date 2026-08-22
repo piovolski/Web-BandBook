@@ -345,7 +345,13 @@ try {
         verify_csrf();
         $payload = request_json();
         $eventId = (int) ($_GET['id'] ?? 0);
-        $repo->setAudienceMode($eventId, (string) ($payload['mode'] ?? ''), (int) $user['id']);
+        if (array_key_exists('mode', $payload)) {
+            $repo->setAudienceMode($eventId, (string) $payload['mode'], (int) $user['id']);
+        } elseif (array_key_exists('font_scale', $payload)) {
+            $repo->setAudienceFontScale($eventId, (int) $payload['font_scale'], (int) $user['id']);
+        } else {
+            throw new RuntimeException('Brak ustawienia ekranu uczestników.');
+        }
         json_response(['ok' => true]);
     }
 

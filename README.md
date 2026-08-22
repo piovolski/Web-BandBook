@@ -80,7 +80,7 @@ Skopiuj adres widoku uczestnika z wydarzenia. Dla dodatkowego monitora Full HD u
 & "C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk --new-window --window-position=1920,0 "ADRES_WIDOKU_UCZESTNIKA"
 ```
 
-Jeśli główny monitor ma inną szerokość albo projektor znajduje się po lewej stronie, zmień pierwszą wartość `--window-position`. Trybem projekcji sterujesz stale widocznymi przyciskami w Live albo skrótami: `B` — blackout, `G` — samo tło, `T` — tekst.
+Jeśli główny monitor ma inną szerokość albo projektor znajduje się po lewej stronie, zmień pierwszą wartość `--window-position`. Trybem projekcji sterujesz stale widocznymi przyciskami w Live albo skrótami: `B` — blackout, `G` — samo tło, `T` — tekst. Przyciski `A−` i `A+` zmieniają wielkość tekstu uczestników w zakresie 60–160%; ustawienie zapisuje się w wydarzeniu i synchronizuje ze wszystkimi otwartymi ekranami.
 
 ## Uruchomienie lokalne
 

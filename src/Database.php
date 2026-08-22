@@ -153,6 +153,7 @@ final class Database
                 current_form_id {$integer} NULL,
                 next_form_id {$integer} NULL,
                 output_mode VARCHAR(20) NOT NULL DEFAULT 'text',
+                audience_font_scale {$integer} NOT NULL DEFAULT 100,
                 revision {$integer} NOT NULL DEFAULT 1,
                 updated_at VARCHAR(32) NOT NULL,
                 updated_by {$integer} NULL,
@@ -182,6 +183,7 @@ final class Database
         self::ensureColumn($pdo, 'event_song_form_items', 'chords_override', $text . ' NULL');
         self::ensureColumn($pdo, 'events', 'background_image', 'VARCHAR(255) NULL');
         self::ensureColumn($pdo, 'live_states', 'output_mode', "VARCHAR(20) NOT NULL DEFAULT 'text'");
+        self::ensureColumn($pdo, 'live_states', 'audience_font_scale', "{$integer} NOT NULL DEFAULT 100");
         self::backfillCategories($pdo);
     }
 

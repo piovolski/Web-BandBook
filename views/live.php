@@ -8,6 +8,11 @@
                 <button type="button" data-output-mode="background" title="Zdjęcie bez tekstu (G)"><kbd>G</kbd> Tło</button>
                 <button type="button" data-output-mode="text" title="Tekst na wybranym tle (T)"><kbd>T</kbd> Tekst</button>
             </div>
+            <div class="live-font-control" data-live-font-control role="group" aria-label="Wielkość tekstu uczestników">
+                <button type="button" data-font-scale-delta="-10" title="Zmniejsz tekst uczestników">A−</button>
+                <output data-font-scale aria-live="polite"><?= (int) ($snapshot['state']['audience_font_scale'] ?? 100) ?>%</output>
+                <button type="button" data-font-scale-delta="10" title="Powiększ tekst uczestników">A+</button>
+            </div>
             <label class="follow-toggle"><input type="checkbox" checked data-follow-current> Śledź „teraz”</label><label class="live-notation">Chwyty<select data-live-notation><option value="pl" <?= $user['notation_profile'] === 'pl' ? 'selected' : '' ?>>H/B · małe</option><option value="intl" <?= $user['notation_profile'] === 'intl' ? 'selected' : '' ?>>B/Bb · m</option></select></label><span class="connection online" data-connection><i></i> Połączono</span>
         </div>
     </header>

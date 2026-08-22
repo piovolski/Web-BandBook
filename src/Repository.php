@@ -745,6 +745,24 @@ final class Repository
         $this->touchEvent($eventId, false);
     }
 
+    public function setAudienceFontScale(int $eventId, int $fontScale, int $userId): void
+    {
+        if ($fontScale < 60 || $fontScale > 160) {
+            throw new RuntimeException('Wielkość tekstu musi mieścić się w zakresie 60–160%.');
+        }
+        if ($this->event($eventId) === null) {
+            throw new RuntimeException('Nie znaleziono wydarzenia.');
+        }
+        $this->liveState($eventId);
+        $statement = $this->db->prepare(
+            'UPDATE live_states
+             SET audience_font_scale = ?, revision = revision + 1, updated_at = ?, updated_by = ?
+             WHERE event_id = ?'
+        );
+        $statement->execute([$fontScale, now(), $userId, $eventId]);
+        $this->touchEvent($eventId, false);
+    }
+
     public function updateLivePartContent(int $eventId, int $formId, array $data): void
     {
         $check = $this->db->prepare(
@@ -864,6 +882,7 @@ final class Repository
                 'current_form_id' => $state['current_form_id'] !== null ? (int) $state['current_form_id'] : null,
                 'next_form_id' => $state['next_form_id'] !== null ? (int) $state['next_form_id'] : null,
                 'output_mode' => in_array(($state['output_mode'] ?? 'text'), ['blackout', 'background', 'text'], true) ? $state['output_mode'] : 'text',
+                'audience_font_scale' => min(160, max(60, (int) ($state['audience_font_scale'] ?? 100))),
                 'revision' => (int) $state['revision'],
                 'updated_at' => $state['updated_at'],
             ],
@@ -1137,6 +1156,7 @@ final class Repository
             'current_form_id' => null,
             'next_form_id' => null,
             'output_mode' => 'text',
+            'audience_font_scale' => 100,
             'revision' => 1,
             'updated_at' => now(),
         ];
