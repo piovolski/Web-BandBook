@@ -68,7 +68,7 @@ Pusta baza musi już istnieć. Tabele są tworzone automatycznie przy pierwszym 
 6. Otwórz **Live** na urządzeniach muzyków.
 7. Udostępnij publiczny link uczestnikom.
 
-Adres nakładki OBS znajduje się obok publicznego linku wydarzenia. Dodaj go w OBS jako **Browser Source** i ustaw rozdzielczość zgodną z transmisją. Tło nakładki jest przezroczyste.
+W szczegółach wydarzenia znajduje się jeden stały adres nakładki OBS (`index.php?route=obs`). Dodaj go w OBS jako **Browser Source** i ustaw rozdzielczość zgodną z transmisją, np. 1920 × 1080. Nakładka ma przezroczyste tło i pokazuje tekst na czarnym pasku przy dolnej krawędzi. Przyciskami Blackout, Tło i Tekst sterujesz jednocześnie ekranem uczestników oraz napisami OBS; w menu „Wygląd OBS” ustawisz osobno wielkość tekstu i widoczność paska.
 
 W trybie live pierwsze kliknięcie części oznacza ją jako następną. Drugie kliknięcie tej samej części potwierdza ją jako graną teraz.
 

@@ -16,7 +16,8 @@ if (!$repo->hasUsers() && $route !== 'setup') {
 }
 
 try {
-    if (in_array($route, ['screen', 'api-screen'], true)) {
+    if (in_array($route, ['screen', 'api-screen', 'obs', 'api-obs'], true)) {
+        $isObsRoute = in_array($route, ['obs', 'api-obs'], true);
         $snapshot = $repo->latestAudienceSnapshot('pl') ?? [
             'event' => [
                 'id' => null,
@@ -34,6 +35,8 @@ try {
                 'next_form_id' => null,
                 'output_mode' => 'blackout',
                 'audience_font_scale' => 100,
+                'obs_font_scale' => 100,
+                'obs_bar_opacity' => 85,
                 'current_sequence' => 0,
                 'revision' => 0,
                 'updated_at' => null,
@@ -42,20 +45,30 @@ try {
             'songs' => [],
             'screen_cursor' => 'none',
         ];
-        if ($route === 'api-screen') {
+        if (in_array($route, ['api-screen', 'api-obs'], true)) {
             $cursor = (string) ($_GET['cursor'] ?? '');
             if ($cursor !== '' && $cursor === (string) $snapshot['screen_cursor']) {
                 json_response(['unchanged' => true, 'cursor' => $snapshot['screen_cursor']]);
             }
             json_response(['unchanged' => false, 'snapshot' => $snapshot]);
         }
-        View::render('public', [
-            'title' => 'Stały ekran uczestników',
-            'snapshot' => $snapshot,
-            'globalAudience' => true,
-            'mainClass' => 'audience-page',
-            'bodyClass' => 'audience-body',
-        ], 'projection_layout');
+        if ($isObsRoute) {
+            View::render('overlay', [
+                'title' => 'Stała nakładka OBS',
+                'snapshot' => $snapshot,
+                'globalOverlay' => true,
+                'mainClass' => 'overlay-page',
+                'bodyClass' => 'overlay-body',
+            ], 'projection_layout');
+        } else {
+            View::render('public', [
+                'title' => 'Stały ekran uczestników',
+                'snapshot' => $snapshot,
+                'globalAudience' => true,
+                'mainClass' => 'audience-page',
+                'bodyClass' => 'audience-body',
+            ], 'projection_layout');
+        }
         exit;
     }
 
@@ -395,6 +408,19 @@ try {
         } else {
             throw new RuntimeException('Brak ustawienia ekranu uczestników.');
         }
+        json_response(['ok' => true]);
+    }
+
+    if ($route === 'api-live-obs' && $method === 'POST') {
+        verify_csrf();
+        $payload = request_json();
+        $eventId = (int) ($_GET['id'] ?? 0);
+        $repo->setObsSetting(
+            $eventId,
+            (string) ($payload['field'] ?? ''),
+            (int) ($payload['value'] ?? 0),
+            (int) $user['id']
+        );
         json_response(['ok' => true]);
     }
 

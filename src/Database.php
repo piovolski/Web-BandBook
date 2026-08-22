@@ -154,6 +154,8 @@ final class Database
                 next_form_id {$integer} NULL,
                 output_mode VARCHAR(20) NOT NULL DEFAULT 'text',
                 audience_font_scale {$integer} NOT NULL DEFAULT 100,
+                obs_font_scale {$integer} NOT NULL DEFAULT 100,
+                obs_bar_opacity {$integer} NOT NULL DEFAULT 85,
                 current_sequence {$integer} NOT NULL DEFAULT 0,
                 revision {$integer} NOT NULL DEFAULT 1,
                 updated_at VARCHAR(32) NOT NULL,
@@ -185,6 +187,8 @@ final class Database
         self::ensureColumn($pdo, 'events', 'background_image', 'VARCHAR(255) NULL');
         self::ensureColumn($pdo, 'live_states', 'output_mode', "VARCHAR(20) NOT NULL DEFAULT 'text'");
         self::ensureColumn($pdo, 'live_states', 'audience_font_scale', "{$integer} NOT NULL DEFAULT 100");
+        self::ensureColumn($pdo, 'live_states', 'obs_font_scale', "{$integer} NOT NULL DEFAULT 100");
+        self::ensureColumn($pdo, 'live_states', 'obs_bar_opacity', "{$integer} NOT NULL DEFAULT 85");
         self::ensureColumn($pdo, 'live_states', 'current_sequence', "{$integer} NOT NULL DEFAULT 0");
         self::backfillCategories($pdo);
     }

@@ -1,5 +1,5 @@
 <?php use BandBook\View; ?>
-<div class="live-app" data-live-app data-event-id="<?= (int) $snapshot['event']['id'] ?>" data-revision="<?= (int) $snapshot['revision'] ?>" data-csrf="<?= e(csrf_token()) ?>" data-api="<?= e(url('api-live', ['id' => $snapshot['event']['id']])) ?>" data-action-api="<?= e(url('api-live-action', ['id' => $snapshot['event']['id']])) ?>" data-output-api="<?= e(url('api-live-output', ['id' => $snapshot['event']['id']])) ?>" data-setting-api="<?= e(url('api-live-setting', ['id' => $snapshot['event']['id']])) ?>" data-part-api="<?= e(url('api-live-part', ['id' => $snapshot['event']['id']])) ?>" data-song-edit-url="<?= e(url('song-edit')) ?>">
+<div class="live-app" data-live-app data-event-id="<?= (int) $snapshot['event']['id'] ?>" data-revision="<?= (int) $snapshot['revision'] ?>" data-csrf="<?= e(csrf_token()) ?>" data-api="<?= e(url('api-live', ['id' => $snapshot['event']['id']])) ?>" data-action-api="<?= e(url('api-live-action', ['id' => $snapshot['event']['id']])) ?>" data-output-api="<?= e(url('api-live-output', ['id' => $snapshot['event']['id']])) ?>" data-obs-api="<?= e(url('api-live-obs', ['id' => $snapshot['event']['id']])) ?>" data-setting-api="<?= e(url('api-live-setting', ['id' => $snapshot['event']['id']])) ?>" data-part-api="<?= e(url('api-live-part', ['id' => $snapshot['event']['id']])) ?>" data-song-edit-url="<?= e(url('song-edit')) ?>">
     <header class="live-header">
         <div><a class="back-link light" href="<?= e(url('event', ['id' => $snapshot['event']['id']])) ?>">← Repertuar</a><p class="eyebrow">Live · <?= e(View::eventDate($snapshot['event']['planned_at'])) ?></p><h1><?= e($snapshot['event']['name']) ?></h1></div>
         <div class="live-header-tools">
@@ -13,6 +13,15 @@
                 <output data-font-scale aria-live="polite"><?= (int) ($snapshot['state']['audience_font_scale'] ?? 100) ?>%</output>
                 <button type="button" data-font-scale-delta="10" title="Powiększ tekst uczestników">A+</button>
             </div>
+            <details class="live-obs-settings" data-live-obs-settings>
+                <summary><span>Wygląd OBS</span></summary>
+                <div class="live-obs-popover">
+                    <p class="live-obs-hint">Widocznością napisów sterują wspólne przyciski Blackout, Tło i Tekst.</p>
+                    <div class="live-obs-row"><span>Wielkość tekstu</span><div class="live-obs-stepper"><button type="button" data-obs-font-delta="-10">A−</button><output data-obs-font-scale><?= (int) ($snapshot['state']['obs_font_scale'] ?? 100) ?>%</output><button type="button" data-obs-font-delta="10">A+</button></div></div>
+                    <label class="live-obs-opacity"><span>Widoczność czarnego paska <output data-obs-opacity-value><?= (int) ($snapshot['state']['obs_bar_opacity'] ?? 85) ?>%</output></span><input type="range" min="0" max="100" step="5" value="<?= (int) ($snapshot['state']['obs_bar_opacity'] ?? 85) ?>" data-obs-opacity></label>
+                    <a class="button button-ghost button-wide" href="<?= e(url('obs')) ?>" target="_blank" rel="noopener">Podgląd stałej nakładki ↗</a>
+                </div>
+            </details>
             <label class="follow-toggle"><input type="checkbox" checked data-follow-current> Śledź „teraz”</label><label class="live-notation">Chwyty<select data-live-notation><option value="pl" <?= $user['notation_profile'] === 'pl' ? 'selected' : '' ?>>H/B · małe</option><option value="intl" <?= $user['notation_profile'] === 'intl' ? 'selected' : '' ?>>B/Bb · m</option></select></label><span class="connection online" data-connection><i></i> Połączono</span>
         </div>
     </header>

@@ -632,6 +632,7 @@
     const notation = $('[data-live-notation]', root);
     const outputSwitch = $('[data-live-output-switch]', root);
     const fontControl = $('[data-live-font-control]', root);
+    const obsSettings = $('[data-live-obs-settings]', root);
     const csrf = root.dataset.csrf;
 
     const request = async (url, options = {}) => {
@@ -658,6 +659,16 @@
         const nextScale = fontScale + Number(button.dataset.fontScaleDelta);
         button.disabled = nextScale < 60 || nextScale > 160;
       });
+      const obsFontScale = Number(snapshot.state.obs_font_scale || 100);
+      const obsOpacity = Number(snapshot.state.obs_bar_opacity ?? 85);
+      $('[data-obs-font-scale]', obsSettings).textContent = `${obsFontScale}%`;
+      $$('[data-obs-font-delta]', obsSettings).forEach(button => {
+        const nextScale = obsFontScale + Number(button.dataset.obsFontDelta);
+        button.disabled = nextScale < 60 || nextScale > 160;
+      });
+      const obsOpacityInput = $('[data-obs-opacity]', obsSettings);
+      if (document.activeElement !== obsOpacityInput) obsOpacityInput.value = String(obsOpacity);
+      $('[data-obs-opacity-value]', obsSettings).textContent = `${obsOpacity}%`;
       if (follow.checked && snapshot.state.event_song_id) selectedSong = snapshot.state.event_song_id;
       nav.innerHTML = snapshot.songs.length ? snapshot.songs.map((song, index) => {
         const active = song.id === Number(selectedSong) ? 'active' : '';
@@ -767,6 +778,22 @@
       finally { busy = false; await poll(true); }
     };
 
+    const saveObsSetting = async (field, value) => {
+      if (busy) return;
+      busy = true;
+      try {
+        await request(root.dataset.obsApi, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','X-CSRF-Token':csrf},
+          body: JSON.stringify({field, value}),
+        });
+        snapshot.state[field] = value;
+        setConnection(true);
+        render();
+      } catch { setConnection(false); }
+      finally { busy = false; await poll(true); }
+    };
+
     const savePart = async card => {
       const saveToSource = $('[data-live-save-source]', card).checked;
       if (saveToSource && !window.confirm('Zapisać tę część w pieśni źródłowej? Zmiana pojawi się w bibliotece i innych wydarzeniach, które nie mają własnego nadpisania.')) return;
@@ -798,6 +825,12 @@
       if (fontScaleButton) {
         const currentScale = Number(snapshot.state.audience_font_scale || 100);
         await setAudienceFontScale(currentScale + Number(fontScaleButton.dataset.fontScaleDelta));
+        return;
+      }
+      const obsFontButton = event.target.closest('[data-obs-font-delta]');
+      if (obsFontButton) {
+        const nextScale = Number(snapshot.state.obs_font_scale || 100) + Number(obsFontButton.dataset.obsFontDelta);
+        if (nextScale >= 60 && nextScale <= 160) await saveObsSetting('obs_font_scale', nextScale);
         return;
       }
       const select = event.target.closest('[data-select-song]');
@@ -844,8 +877,17 @@
       }
     });
     root.addEventListener('change', event => {
+      const obsOpacity = event.target.closest('[data-obs-opacity]');
+      if (obsOpacity) {
+        saveObsSetting('obs_bar_opacity', Number(obsOpacity.value));
+        return;
+      }
       const setting = event.target.closest('[data-live-setting]');
       if (setting) saveSetting(setting.dataset.scope, Number(setting.dataset.id), setting.dataset.field, setting.value);
+    });
+    root.addEventListener('input', event => {
+      const obsOpacity = event.target.closest('[data-obs-opacity]');
+      if (obsOpacity) $('[data-obs-opacity-value]', obsSettings).textContent = `${obsOpacity.value}%`;
     });
     notation.addEventListener('change', () => poll(true));
     document.addEventListener('keydown', event => {
@@ -869,8 +911,8 @@
     const stage = $('[data-audience-stage]', root);
     const next = $('[data-audience-next]', root);
     const connection = $('[data-connection]', root);
-    const isOverlay = root.dataset.projectionKind === 'overlay';
-    const isGlobalAudience = root.dataset.projectionKind === 'global';
+    const isOverlay = root.dataset.projectionKind.endsWith('overlay');
+    const isGlobalAudience = root.dataset.projectionKind.startsWith('global');
 
     const findItem = id => {
       for (const song of snapshot.songs) {
@@ -898,9 +940,18 @@
       root.classList.toggle('mode-text', mode === 'text');
       setBackground();
       if (isOverlay) {
-        stage.innerHTML = mode === 'text' && current
-          ? `<article class="audience-content"><p class="eyebrow">${escapeHtml(current.song.title)}</p><h1>${escapeHtml(current.item.label)}</h1><div class="audience-lyrics">${String(current.item.lyrics).split(/\r?\n/).map(line => `<p>${escapeHtml(line) || '&nbsp;'}</p>`).join('')}</div></article>`
-          : '';
+        if (mode === 'text' && current) {
+          const lines = String(current.item.lyrics || '').split(/\r?\n/);
+          const visibleLines = lines.filter(line => line.trim() !== '').length;
+          const sizeClass = visibleLines > 6 ? 'compact' : (visibleLines > 4 ? 'medium' : 'large');
+          const scale = Math.min(160, Math.max(60, Number(snapshot.state.obs_font_scale || 100))) / 100;
+          const sizes = sizeClass === 'compact' ? [0.68, 1.1, 1.35] : (sizeClass === 'medium' ? [0.83, 1.4, 1.65] : [1, 1.7, 2]);
+          const fontSize = `clamp(${(sizes[0] * scale).toFixed(2)}rem, ${(sizes[1] * scale).toFixed(2)}vw, ${(sizes[2] * scale).toFixed(2)}rem)`;
+          const opacity = Math.min(100, Math.max(0, Number(snapshot.state.obs_bar_opacity ?? 85))) / 100;
+          stage.innerHTML = `<article class="obs-bar ${sizeClass}" style="--obs-bar-opacity:${opacity.toFixed(2)};font-size:${fontSize}"><div class="obs-lyrics">${lines.map(line => `<p>${escapeHtml(line) || '&nbsp;'}</p>`).join('')}</div></article>`;
+        } else {
+          stage.innerHTML = '';
+        }
       } else if (mode === 'text' && current) {
         const lines = String(current.item.lyrics || '').split(/\r?\n/);
         const visibleLines = lines.filter(line => line.trim() !== '').length;

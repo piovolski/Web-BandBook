@@ -765,6 +765,28 @@ final class Repository
         $this->touchEvent($eventId, false);
     }
 
+    public function setObsSetting(int $eventId, string $field, int $value, int $userId): void
+    {
+        $ranges = [
+            'obs_font_scale' => [60, 160],
+            'obs_bar_opacity' => [0, 100],
+        ];
+        if (!isset($ranges[$field]) || $value < $ranges[$field][0] || $value > $ranges[$field][1]) {
+            throw new RuntimeException('Nieprawidłowe ustawienie nakładki OBS.');
+        }
+        if ($this->event($eventId) === null) {
+            throw new RuntimeException('Nie znaleziono wydarzenia.');
+        }
+        $this->liveState($eventId);
+        $statement = $this->db->prepare(
+            "UPDATE live_states
+             SET {$field} = ?, revision = revision + 1, updated_at = ?, updated_by = ?
+             WHERE event_id = ?"
+        );
+        $statement->execute([$value, now(), $userId, $eventId]);
+        $this->touchEvent($eventId, false);
+    }
+
     public function updateLivePartContent(int $eventId, int $formId, array $data): void
     {
         $check = $this->db->prepare(
@@ -885,6 +907,8 @@ final class Repository
                 'next_form_id' => $state['next_form_id'] !== null ? (int) $state['next_form_id'] : null,
                 'output_mode' => in_array(($state['output_mode'] ?? 'text'), ['blackout', 'background', 'text'], true) ? $state['output_mode'] : 'text',
                 'audience_font_scale' => min(160, max(60, (int) ($state['audience_font_scale'] ?? 100))),
+                'obs_font_scale' => min(160, max(60, (int) ($state['obs_font_scale'] ?? 100))),
+                'obs_bar_opacity' => min(100, max(0, (int) ($state['obs_bar_opacity'] ?? 85))),
                 'current_sequence' => (int) ($state['current_sequence'] ?? 0),
                 'revision' => (int) $state['revision'],
                 'updated_at' => $state['updated_at'],
@@ -1184,6 +1208,8 @@ final class Repository
             'next_form_id' => null,
             'output_mode' => 'text',
             'audience_font_scale' => 100,
+            'obs_font_scale' => 100,
+            'obs_bar_opacity' => 85,
             'current_sequence' => 0,
             'revision' => 1,
             'updated_at' => now(),
