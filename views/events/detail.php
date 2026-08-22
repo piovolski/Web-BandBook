@@ -29,6 +29,7 @@ $groupLabels = [
 <div class="planner-layout" data-song-browser
      data-preview-api="<?= e(url('api-song-preview')) ?>"
      data-add-api="<?= e(url('api-event-song-add', ['id' => $event['id']])) ?>"
+     data-song-edit-url="<?= e(url('song-edit')) ?>"
      data-csrf="<?= e(csrf_token()) ?>">
     <section class="song-browser-panel">
         <header class="browser-heading">

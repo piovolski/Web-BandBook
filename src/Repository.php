@@ -459,7 +459,13 @@ final class Repository
             return null;
         }
         $form = $this->db->prepare(
-            'SELECT f.*, s.label AS section_label, s.type AS section_type, s.lyrics, s.chords, s.comment AS section_comment
+            'SELECT f.*,
+                    s.label AS source_label, s.lyrics AS source_lyrics, s.chords AS source_chords,
+                    COALESCE(f.label_override, s.label) AS section_label,
+                    s.type AS section_type,
+                    COALESCE(f.lyrics_override, s.lyrics) AS lyrics,
+                    COALESCE(f.chords_override, s.chords) AS chords,
+                    s.comment AS section_comment
              FROM event_song_form_items f
              JOIN song_sections s ON s.id = f.section_id
              WHERE f.event_song_id = ? ORDER BY f.position, f.id'
@@ -501,8 +507,9 @@ final class Repository
             $delete = $this->db->prepare('DELETE FROM event_song_form_items WHERE event_song_id = ?');
             $delete->execute([$id]);
             $insert = $this->db->prepare(
-                'INSERT INTO event_song_form_items (event_song_id, section_id, position, transpose_steps, comment)
-                 VALUES (?, ?, ?, ?, ?)'
+                'INSERT INTO event_song_form_items
+                    (event_song_id, section_id, position, transpose_steps, comment, label_override, lyrics_override, chords_override)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
             );
             foreach (array_values($form) as $position => $item) {
                 $sectionId = (int) ($item['sectionId'] ?? 0);
@@ -515,6 +522,13 @@ final class Repository
                     $position,
                     (int) ($item['transpose'] ?? 0),
                     $this->nullable($item['comment'] ?? null),
+                    $this->nullable($item['labelOverride'] ?? null),
+                    array_key_exists('lyricsOverride', $item) && $item['lyricsOverride'] !== null
+                        ? (string) $item['lyricsOverride']
+                        : null,
+                    array_key_exists('chordsOverride', $item) && $item['chordsOverride'] !== null
+                        ? (string) $item['chordsOverride']
+                        : null,
                 ]);
             }
             $this->clearInvalidLiveState((int) $eventSong['event_id']);
@@ -656,6 +670,67 @@ final class Repository
         $this->touchEvent($eventId);
     }
 
+    public function updateLivePartContent(int $eventId, int $formId, array $data): void
+    {
+        $check = $this->db->prepare(
+            'SELECT f.id, f.section_id, es.song_id FROM event_song_form_items f
+             JOIN event_songs es ON es.id = f.event_song_id
+             WHERE f.id = ? AND es.event_id = ?'
+        );
+        $check->execute([$formId, $eventId]);
+        $target = $check->fetch();
+        if (!$target) {
+            throw new RuntimeException('Część nie należy do wydarzenia.');
+        }
+
+        $labelText = trim((string) ($data['label'] ?? ''));
+        $label = $this->nullable($labelText);
+        $lyrics = array_key_exists('lyrics', $data) ? (string) $data['lyrics'] : null;
+        $chords = array_key_exists('chords', $data) ? (string) $data['chords'] : null;
+        $saveToSource = !empty($data['save_to_source']);
+        if ($saveToSource && $label === null) {
+            throw new RuntimeException('Nazwa części źródłowej nie może być pusta.');
+        }
+
+        $this->db->beginTransaction();
+        try {
+            if ($saveToSource) {
+                $sourceUpdate = $this->db->prepare(
+                    'UPDATE song_sections SET label = ?, lyrics = ?, chords = ? WHERE id = ? AND song_id = ?'
+                );
+                $sourceUpdate->execute([
+                    $label,
+                    $lyrics,
+                    $chords,
+                    (int) $target['section_id'],
+                    (int) $target['song_id'],
+                ]);
+                $songUpdate = $this->db->prepare('UPDATE songs SET updated_at = ? WHERE id = ?');
+                $songUpdate->execute([now(), (int) $target['song_id']]);
+                $clearOverride = $this->db->prepare(
+                    'UPDATE event_song_form_items
+                     SET label_override = NULL, lyrics_override = NULL, chords_override = NULL
+                     WHERE id = ?'
+                );
+                $clearOverride->execute([$formId]);
+                $this->touchEventsUsingSong((int) $target['song_id']);
+                $this->log('song', (int) $target['song_id'], 'updated_from_live');
+            } else {
+                $overrideUpdate = $this->db->prepare(
+                    'UPDATE event_song_form_items
+                     SET label_override = ?, lyrics_override = ?, chords_override = ?
+                     WHERE id = ?'
+                );
+                $overrideUpdate->execute([$label, $lyrics, $chords, $formId]);
+                $this->touchEvent($eventId);
+            }
+            $this->db->commit();
+        } catch (Throwable $error) {
+            $this->db->rollBack();
+            throw $error;
+        }
+    }
+
     public function liveSnapshot(int $eventId, string $outputProfile): ?array
     {
         $event = $this->event($eventId);
@@ -679,6 +754,8 @@ final class Repository
                     'type' => $item['section_type'],
                     'lyrics' => $item['lyrics'],
                     'chords' => Chord::transposeLines((string) $item['chords'], $steps, (string) $details['notation_profile'], $outputProfile),
+                    'editable_lyrics' => $item['lyrics'],
+                    'editable_chords' => $item['chords'],
                     'comment' => $item['comment'] ?: $item['section_comment'],
                     'transpose_steps' => (int) $item['transpose_steps'],
                     'effective_transpose' => $steps,
@@ -923,6 +1000,15 @@ final class Repository
         if ($touchState) {
             $state = $this->db->prepare('UPDATE live_states SET revision = revision + 1, updated_at = ? WHERE event_id = ?');
             $state->execute([now(), $eventId]);
+        }
+    }
+
+    private function touchEventsUsingSong(int $songId): void
+    {
+        $statement = $this->db->prepare('SELECT DISTINCT event_id FROM event_songs WHERE song_id = ?');
+        $statement->execute([$songId]);
+        foreach ($statement->fetchAll(PDO::FETCH_COLUMN) as $eventId) {
+            $this->touchEvent((int) $eventId);
         }
     }
 

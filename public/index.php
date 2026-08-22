@@ -319,6 +319,23 @@ try {
         json_response(['ok' => true]);
     }
 
+    if ($route === 'api-live-part' && $method === 'POST') {
+        verify_csrf();
+        $payload = request_json();
+        $eventId = (int) ($_GET['id'] ?? 0);
+        $repo->updateLivePartContent(
+            $eventId,
+            (int) ($payload['form_id'] ?? 0),
+            [
+                'label' => $payload['label'] ?? null,
+                'lyrics' => $payload['lyrics'] ?? '',
+                'chords' => $payload['chords'] ?? '',
+                'save_to_source' => (bool) ($payload['save_to_source'] ?? false),
+            ]
+        );
+        json_response(['ok' => true]);
+    }
+
     if ($route === 'settings') {
         if ($method === 'POST') {
             verify_csrf();

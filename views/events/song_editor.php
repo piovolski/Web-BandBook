@@ -1,10 +1,22 @@
 <?php
 $formPayload = array_map(fn ($item) => [
-    'id' => (int) $item['id'], 'sectionId' => (int) $item['section_id'], 'label' => $item['section_label'],
-    'transpose' => (int) $item['transpose_steps'], 'comment' => $item['comment'] ?? '',
+    'id' => (int) $item['id'],
+    'sectionId' => (int) $item['section_id'],
+    'labelOverride' => $item['label_override'],
+    'lyricsOverride' => $item['lyrics_override'],
+    'chordsOverride' => $item['chords_override'],
+    'sourceLabel' => $item['source_label'],
+    'sourceLyrics' => $item['source_lyrics'],
+    'sourceChords' => $item['source_chords'],
+    'transpose' => (int) $item['transpose_steps'],
+    'comment' => $item['comment'] ?? '',
 ], $eventSong['form']);
 $sectionsPayload = array_map(fn ($section) => [
-    'id' => (int) $section['id'], 'label' => $section['label'], 'type' => $section['type'],
+    'id' => (int) $section['id'],
+    'label' => $section['label'],
+    'type' => $section['type'],
+    'lyrics' => $section['lyrics'],
+    'chords' => $section['chords'],
 ], $eventSong['available_sections']);
 ?>
 <section class="page-heading compact-heading"><div><a class="back-link" href="<?= e(url('event', ['id' => $eventSong['event_id']])) ?>">← <?= e($eventSong['event_name']) ?></a><p class="eyebrow">Pieśń w wydarzeniu</p><h1><?= e($eventSong['title']) ?></h1></div><a class="button button-primary" href="<?= e(url('live', ['id' => $eventSong['event_id']])) ?>">Podgląd live</a></section>
@@ -19,9 +31,9 @@ $sectionsPayload = array_map(fn ($section) => [
                 <label class="span-2">Komentarz do pieśni<textarea name="comment" rows="3" placeholder="Np. zaczynamy spokojnie, bez perkusji"><?= e($eventSong['comment'] ?? '') ?></textarea></label>
             </div>
         </article>
-        <article class="panel"><div class="panel-heading"><div><span class="step-number">2</span><div><h2>Forma na to wydarzenie</h2><p>Kliknij część, aby dodać ją na końcu. Każde wystąpienie ma własną transpozycję i komentarz.</p></div></div></div><div class="event-form-palette" data-event-form-palette></div><div class="event-form-list" data-event-form-list></div></article>
+        <article class="panel"><div class="panel-heading"><div><span class="step-number">2</span><div><h2>Forma na to wydarzenie</h2><p>Kliknij część, aby dodać ją na końcu. Każde wystąpienie ma własną transpozycję, komentarz, tekst i chwyty.</p></div></div></div><div class="event-form-palette" data-event-form-palette></div><div class="event-form-list" data-event-form-list></div></article>
     </section>
-    <aside class="editor-sidebar"><div class="sticky-card"><p class="eyebrow">Wydarzenie</p><h3><?= e($eventSong['event_name']) ?></h3><p class="muted">Zmiany dotyczą tylko tej pozycji repertuaru.</p><button class="button button-primary button-wide" type="submit">Zapisz wykonanie</button><a class="button button-ghost button-wide" href="<?= e(url('event', ['id' => $eventSong['event_id']])) ?>">Anuluj</a></div></aside>
+    <aside class="editor-sidebar"><div class="sticky-card"><p class="eyebrow">Wydarzenie</p><h3><?= e($eventSong['event_name']) ?></h3><p class="muted">Zmiany formularza dotyczą tylko tej pozycji repertuaru.</p><button class="button button-primary button-wide" type="submit">Zapisz wykonanie</button><a class="button button-ghost button-wide" href="<?= e(url('event', ['id' => $eventSong['event_id']])) ?>">Anuluj</a><div class="source-song-edit"><strong>Pieśń źródłowa</strong><p>Pełna edycja zmieni wpis w bibliotece i wszystkie wydarzenia bez własnych nadpisań.</p><a class="button button-ghost button-wide" target="_blank" rel="noopener" href="<?= e(url('song-edit', ['id' => $eventSong['song_id']])) ?>">Edytuj pieśń w bibliotece ↗</a></div></div></aside>
 </form>
 <script type="application/json" data-event-initial-form><?= json_encode($formPayload, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?></script>
 <script type="application/json" data-event-sections><?= json_encode($sectionsPayload, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?></script>

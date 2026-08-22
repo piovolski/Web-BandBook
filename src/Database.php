@@ -140,6 +140,9 @@ final class Database
                 position {$integer} NOT NULL,
                 transpose_steps {$integer} NOT NULL DEFAULT 0,
                 comment {$text} NULL,
+                label_override VARCHAR(160) NULL,
+                lyrics_override {$text} NULL,
+                chords_override {$text} NULL,
                 FOREIGN KEY (event_song_id) REFERENCES event_songs(id) ON DELETE CASCADE,
                 FOREIGN KEY (section_id) REFERENCES song_sections(id)
             )",
@@ -172,7 +175,31 @@ final class Database
             $pdo->exec($statement);
         }
 
+        self::ensureColumn($pdo, 'event_song_form_items', 'label_override', 'VARCHAR(160) NULL');
+        self::ensureColumn($pdo, 'event_song_form_items', 'lyrics_override', $text . ' NULL');
+        self::ensureColumn($pdo, 'event_song_form_items', 'chords_override', $text . ' NULL');
         self::backfillCategories($pdo);
+    }
+
+    private static function ensureColumn(PDO $pdo, string $table, string $column, string $definition): void
+    {
+        $driver = (string) $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        if ($driver === 'sqlite') {
+            $columns = $pdo->query("PRAGMA table_info({$table})")->fetchAll();
+            foreach ($columns as $existing) {
+                if (($existing['name'] ?? null) === $column) {
+                    return;
+                }
+            }
+        } else {
+            $statement = $pdo->prepare("SHOW COLUMNS FROM {$table} LIKE ?");
+            $statement->execute([$column]);
+            if ($statement->fetch() !== false) {
+                return;
+            }
+        }
+
+        $pdo->exec("ALTER TABLE {$table} ADD COLUMN {$column} {$definition}");
     }
 
     private static function backfillCategories(PDO $pdo): void

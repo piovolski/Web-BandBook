@@ -202,9 +202,40 @@
     const hidden = $('[data-event-form-json]', root);
 
     const sync = () => hidden.value = JSON.stringify(form);
+    const sourceSection = item => sections.find(section => section.id === Number(item.sectionId));
+    const effective = (item, field) => {
+      const override = item[`${field}Override`];
+      if (override !== null && override !== undefined) return String(override);
+      const ownSource = item[`source${field[0].toUpperCase()}${field.slice(1)}`];
+      if (ownSource !== null && ownSource !== undefined) return String(ownSource);
+      const section = sourceSection(item);
+      return String(section?.[field] ?? '');
+    };
     const render = () => {
       palette.innerHTML = sections.map(section => `<button type="button" data-event-add="${section.id}">+ ${escapeHtml(section.label)}</button>`).join('');
-      list.innerHTML = form.length ? form.map((item, index) => `<article class="event-form-item" data-event-form-index="${index}"><span class="form-order">${index + 1}</span><div class="event-form-name"><strong>${escapeHtml(item.label || sections.find(s => s.id === item.sectionId)?.label || 'Część')}</strong><small>Wystąpienie w formie</small></div><label>Transpozycja<input type="number" min="-24" max="24" value="${Number(item.transpose || 0)}" data-event-transpose></label><label class="event-form-comment">Komentarz<input value="${escapeHtml(item.comment || '')}" placeholder="Opcjonalnie" data-event-comment></label><div class="mini-actions"><button type="button" data-event-move="-1">↑</button><button type="button" data-event-move="1">↓</button><button type="button" data-event-clone title="Powtórz">⧉</button><button type="button" data-event-remove>×</button></div></article>`).join('') : '<div class="form-empty">Forma jest pusta. Dodaj część powyżej.</div>';
+      list.innerHTML = form.length ? form.map((item, index) => {
+        const label = effective(item, 'label') || 'Część';
+        const lyrics = effective(item, 'lyrics');
+        const chords = effective(item, 'chords');
+        const isCustom = ['labelOverride', 'lyricsOverride', 'chordsOverride'].some(field => item[field] !== null && item[field] !== undefined);
+        return `<article class="event-form-item" data-event-form-index="${index}">
+          <span class="form-order">${index + 1}</span>
+          <div class="event-form-name"><strong data-event-part-heading>${escapeHtml(label)}</strong><small>${isCustom ? 'Wersja zmieniona dla wydarzenia' : 'Wystąpienie w formie'}</small></div>
+          <label>Transpozycja<input type="number" min="-24" max="24" value="${Number(item.transpose || 0)}" data-event-transpose></label>
+          <label class="event-form-comment">Komentarz<input value="${escapeHtml(item.comment || '')}" placeholder="Opcjonalnie" data-event-comment></label>
+          <div class="mini-actions"><button type="button" data-event-move="-1" title="W górę">↑</button><button type="button" data-event-move="1" title="W dół">↓</button><button type="button" data-event-clone title="Powtórz">⧉</button><button type="button" data-event-remove title="Usuń">×</button></div>
+          <details class="event-part-editor"><summary>Edytuj tekst i chwyty tej części</summary>
+            <div class="event-part-editor-body">
+              <label>Nazwa części<input value="${escapeHtml(label)}" data-event-part-label></label>
+              <div class="lyrics-chords-grid">
+                <label>Tekst<textarea rows="7" data-event-part-lyrics>${escapeHtml(lyrics)}</textarea></label>
+                <label>Chwyty<textarea rows="7" data-event-part-chords>${escapeHtml(chords)}</textarea></label>
+              </div>
+              <div class="event-part-editor-foot"><small>Zmiany dotyczą wyłącznie tego wystąpienia części w tym wydarzeniu.</small><button class="button button-ghost" type="button" data-event-part-reset>Przywróć wersję źródłową</button></div>
+            </div>
+          </details>
+        </article>`;
+      }).join('') : '<div class="form-empty">Forma jest pusta. Dodaj część powyżej.</div>';
       sync();
     };
 
@@ -212,7 +243,17 @@
       const target = event.target;
       if (target.matches('[data-event-add]')) {
         const section = sections.find(item => item.id === Number(target.dataset.eventAdd));
-        if (section) form.push({sectionId: section.id, label: section.label, transpose: 0, comment: ''});
+        if (section) form.push({
+          sectionId: section.id,
+          sourceLabel: section.label,
+          sourceLyrics: section.lyrics,
+          sourceChords: section.chords,
+          labelOverride: null,
+          lyricsOverride: null,
+          chordsOverride: null,
+          transpose: 0,
+          comment: '',
+        });
         render();
       }
       const card = target.closest('[data-event-form-index]');
@@ -220,11 +261,16 @@
       const index = Number(card.dataset.eventFormIndex);
       if (target.matches('[data-event-remove]')) form.splice(index, 1);
       if (target.matches('[data-event-clone]')) form.splice(index + 1, 0, {...form[index], id: null});
+      if (target.matches('[data-event-part-reset]')) {
+        form[index].labelOverride = null;
+        form[index].lyricsOverride = null;
+        form[index].chordsOverride = null;
+      }
       if (target.matches('[data-event-move]')) {
         const next = index + Number(target.dataset.eventMove);
         if (next >= 0 && next < form.length) [form[index], form[next]] = [form[next], form[index]];
       }
-      if (target.matches('[data-event-remove], [data-event-clone], [data-event-move]')) render();
+      if (target.matches('[data-event-remove], [data-event-clone], [data-event-move], [data-event-part-reset]')) render();
     });
     root.addEventListener('input', event => {
       const card = event.target.closest('[data-event-form-index]');
@@ -232,6 +278,13 @@
       const item = form[Number(card.dataset.eventFormIndex)];
       if (event.target.matches('[data-event-transpose]')) item.transpose = Number(event.target.value || 0);
       if (event.target.matches('[data-event-comment]')) item.comment = event.target.value;
+      if (event.target.matches('[data-event-part-label]')) {
+        item.labelOverride = event.target.value;
+        const heading = $('[data-event-part-heading]', card);
+        if (heading) heading.textContent = event.target.value || 'Część';
+      }
+      if (event.target.matches('[data-event-part-lyrics]')) item.lyricsOverride = event.target.value;
+      if (event.target.matches('[data-event-part-chords]')) item.chordsOverride = event.target.value;
       sync();
     });
     root.addEventListener('submit', sync);
@@ -342,7 +395,9 @@
         const formSections = (song.form || []).map(item => sections.get(Number(item.section_id))).filter(Boolean);
         const ordered = formSections.length ? formSections : (song.sections || []);
         const badges = (song.categories || []).map(item => `<span>${escapeHtml(item.name)}</span>`).join('');
-        preview.innerHTML = `<div class="preview-head"><div><p class="eyebrow">Podgląd pieśni</p><h2>${escapeHtml(song.title)}</h2><p>${escapeHtml(song.authors || song.alt_title || '')}</p></div><button class="button button-primary" type="button" data-add-song="${song.id}">Dodaj</button></div>
+        const editUrl = new URL(root.dataset.songEditUrl, window.location.href);
+        editUrl.searchParams.set('id', String(song.id));
+        preview.innerHTML = `<div class="preview-head"><div><p class="eyebrow">Podgląd pieśni</p><h2>${escapeHtml(song.title)}</h2><p>${escapeHtml(song.authors || song.alt_title || '')}</p></div><div class="preview-actions"><a class="button button-ghost" href="${escapeHtml(editUrl.href)}" target="_blank" rel="noopener">Edytuj ↗</a><button class="button button-primary" type="button" data-add-song="${song.id}">Dodaj</button></div></div>
           <div class="preview-meta"><span>Tonacja <b>${escapeHtml(song.source_key || '—')}</b></span><span>Tempo <b>${escapeHtml(song.bpm || '—')} BPM</b></span><span>Forma <b>${ordered.length} części</b></span></div>
           <div class="preview-badges">${badges}</div>
           <div class="preview-form">${ordered.map(previewPart).join('')}</div>`;
@@ -465,6 +520,8 @@
         stage.innerHTML = '<div class="live-empty"><span>♪</span><h2>Dodaj pieśni do repertuaru</h2><p>Pozycje pojawią się tutaj automatycznie.</p></div>';
         return;
       }
+      const songEditUrl = new URL(root.dataset.songEditUrl, window.location.href);
+      songEditUrl.searchParams.set('id', String(song.song_id));
       stage.innerHTML = `
         <section class="live-song-head">
           <div><p class="eyebrow">Aktualnie otwarta pieśń</p><h2>${escapeHtml(song.title)}</h2><p>${song.source_key ? `Tonacja źródłowa ${escapeHtml(song.source_key)} · ` : ''}${song.form.length} części w formie</p></div>
@@ -474,6 +531,7 @@
           </div>
         </section>
         <label class="live-song-note">Komentarz do pieśni<textarea rows="2" placeholder="Brak komentarza" data-live-setting data-scope="song" data-id="${song.id}" data-field="comment">${escapeHtml(song.comment || '')}</textarea></label>
+        <details class="live-song-more"><summary>Więcej opcji</summary><div><p>Zmiana pieśni źródłowej wpływa na bibliotekę i wydarzenia bez własnych nadpisań.</p><a class="button button-ghost" href="${escapeHtml(songEditUrl.href)}" target="_blank" rel="noopener">Edytuj pieśń w bibliotece ↗</a></div></details>
         <div class="live-form">${song.form.map((item, index) => renderLiveItem(item, index)).join('')}</div>`;
     };
 
@@ -484,8 +542,14 @@
       const stateClass = item.id === snapshot.state.current_form_id ? 'is-now' : (item.id === snapshot.state.next_form_id ? 'is-next' : '');
       const badge = item.id === snapshot.state.current_form_id ? '<span class="state-badge now">Teraz</span>' : (item.id === snapshot.state.next_form_id ? '<span class="state-badge next">Następna</span>' : '');
       return `<article class="live-form-card ${stateClass}" data-live-form-id="${item.id}">
-        <header><span class="form-order">${index + 1}</span><h3>${escapeHtml(item.label)}</h3>${badge}<div class="part-transpose"><button type="button" data-live-delta="-1" data-scope="form" data-id="${item.id}" data-field="transpose_steps">−</button><span>${signed(item.transpose_steps)}</span><button type="button" data-live-delta="1" data-scope="form" data-id="${item.id}" data-field="transpose_steps">+</button></div></header>
+        <header><span class="form-order">${index + 1}</span><h3>${escapeHtml(item.label)}</h3>${badge}<button class="live-edit-part" type="button" data-live-edit-part>Edytuj część</button><div class="part-transpose"><button type="button" data-live-delta="-1" data-scope="form" data-id="${item.id}" data-field="transpose_steps">−</button><span>${signed(item.transpose_steps)}</span><button type="button" data-live-delta="1" data-scope="form" data-id="${item.id}" data-field="transpose_steps">+</button></div></header>
         <div class="live-lyrics">${lines}</div>
+        <div class="live-part-editor" data-live-part-editor hidden>
+          <label>Nazwa części<input value="${escapeHtml(item.label)}" data-live-part-label></label>
+          <div class="live-part-fields"><label>Tekst<textarea rows="7" data-live-part-lyrics>${escapeHtml(item.editable_lyrics ?? item.lyrics ?? '')}</textarea></label><label>Chwyty w tonacji bazowej<textarea rows="7" data-live-part-chords>${escapeHtml(item.editable_chords ?? '')}</textarea></label></div>
+          <label class="live-source-option"><input type="checkbox" data-live-save-source><span><strong>Zapisz także w pieśni źródłowej</strong><small>Zmiana obejmie bibliotekę i inne wydarzenia bez własnego nadpisania.</small></span></label>
+          <div class="live-part-editor-actions"><small>Bez zaznaczenia zmiana dotyczy tylko bieżącego wydarzenia.</small><button class="button button-ghost" type="button" data-live-cancel-part>Anuluj</button><button class="button button-primary" type="button" data-live-save-part>Zapisz część</button></div>
+        </div>
         <label class="part-comment">Komentarz<input value="${escapeHtml(item.comment || '')}" placeholder="Brak" data-live-setting data-scope="form" data-id="${item.id}" data-field="comment"></label>
       </article>`;
     };
@@ -515,6 +579,27 @@
       finally { busy = false; await poll(true); }
     };
 
+    const savePart = async card => {
+      const saveToSource = $('[data-live-save-source]', card).checked;
+      if (saveToSource && !window.confirm('Zapisać tę część w pieśni źródłowej? Zmiana pojawi się w bibliotece i innych wydarzeniach, które nie mają własnego nadpisania.')) return;
+      busy = true;
+      try {
+        await request(root.dataset.partApi, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','X-CSRF-Token':csrf},
+          body: JSON.stringify({
+            form_id: Number(card.dataset.liveFormId),
+            label: $('[data-live-part-label]', card).value,
+            lyrics: $('[data-live-part-lyrics]', card).value,
+            chords: $('[data-live-part-chords]', card).value,
+            save_to_source: saveToSource,
+          }),
+        });
+        setConnection(true);
+      } catch { setConnection(false); }
+      finally { busy = false; await poll(true); }
+    };
+
     root.addEventListener('click', async event => {
       const select = event.target.closest('[data-select-song]');
       if (select) { selectedSong = Number(select.dataset.selectSong); follow.checked = false; render(); return; }
@@ -528,8 +613,28 @@
         await saveSetting(delta.dataset.scope, Number(delta.dataset.id), delta.dataset.field, current + Number(delta.dataset.liveDelta));
         return;
       }
+      const editPart = event.target.closest('[data-live-edit-part]');
+      if (editPart) {
+        event.stopPropagation();
+        const editor = $('[data-live-part-editor]', editPart.closest('[data-live-form-id]'));
+        editor.hidden = !editor.hidden;
+        if (!editor.hidden) $('[data-live-part-label]', editor)?.focus();
+        return;
+      }
+      const cancelPart = event.target.closest('[data-live-cancel-part]');
+      if (cancelPart) {
+        event.stopPropagation();
+        cancelPart.closest('[data-live-part-editor]').hidden = true;
+        return;
+      }
+      const savePartButton = event.target.closest('[data-live-save-part]');
+      if (savePartButton) {
+        event.stopPropagation();
+        await savePart(savePartButton.closest('[data-live-form-id]'));
+        return;
+      }
       const card = event.target.closest('[data-live-form-id]');
-      if (card && !event.target.closest('input, textarea, button, label')) {
+      if (card && !event.target.closest('input, textarea, button, label, [data-live-part-editor]')) {
         busy = true;
         card.classList.add('is-sending');
         try {

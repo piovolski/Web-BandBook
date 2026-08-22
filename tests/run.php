@@ -83,12 +83,77 @@ $eventSongId = $repo->addSongToEvent($eventId, (int) $songs[0]['id']);
 $eventSong = $repo->eventSong($eventSongId);
 expectSame(true, count($eventSong['form']) > 1, 'skopiowanie domyślnej formy do wydarzenia');
 
+$editedForm = array_map(
+    fn (array $item, int $index): array => [
+        'sectionId' => (int) $item['section_id'],
+        'transpose' => (int) $item['transpose_steps'],
+        'comment' => $item['comment'] ?? '',
+        'labelOverride' => $index === 0 ? 'Zwrotka próbna' : null,
+        'lyricsOverride' => $index === 0 ? "Tekst tylko dla wydarzenia\nDrugi wers" : null,
+        'chordsOverride' => $index === 0 ? "C G\na F" : null,
+    ],
+    $eventSong['form'],
+    array_keys($eventSong['form'])
+);
+$repo->saveEventSong($eventSongId, [
+    'transpose_steps' => 0,
+    'bpm_override' => '',
+    'comment' => '',
+    'form_json' => json_encode($editedForm, JSON_THROW_ON_ERROR),
+]);
+$eventSong = $repo->eventSong($eventSongId);
+expectSame('Zwrotka próbna', $eventSong['form'][0]['section_label'], 'edycja nazwy części w repertuarze');
+expectSame("Tekst tylko dla wydarzenia\nDrugi wers", $eventSong['form'][0]['lyrics'], 'edycja tekstu części w repertuarze');
+expectSame("C G\na F", $eventSong['form'][0]['chords'], 'edycja chwytów części w repertuarze');
+
+$secondEventId = $repo->saveEvent(null, [
+    'name' => 'Drugie wydarzenie',
+    'planned_at' => '2026-08-24T18:00',
+    'location' => 'Sala',
+    'status' => 'draft',
+    'comment' => '',
+]);
+$secondEventSongId = $repo->addSongToEvent($secondEventId, (int) $eventSong['song_id']);
+$secondEventSong = $repo->eventSong($secondEventSongId);
+expectSame($eventSong['form'][0]['source_lyrics'], $secondEventSong['form'][0]['lyrics'], 'nadpisanie nie zmienia tej samej pieśni w innym wydarzeniu');
+
 $snapshot = $repo->liveSnapshot($eventId, 'pl');
 $firstFormId = (int) $snapshot['songs'][0]['form'][0]['id'];
+expectSame('Zwrotka próbna', $snapshot['songs'][0]['form'][0]['label'], 'nadpisana część trafia do widoku live');
 $first = $repo->directLive($eventId, $firstFormId, $adminId);
 expectSame('next', $first['action'], 'pierwsze kliknięcie ustawia następną część');
 $second = $repo->directLive($eventId, $firstFormId, $adminId);
 expectSame('now', $second['action'], 'drugie kliknięcie ustawia część graną teraz');
+
+$repo->updateLivePartContent($eventId, $firstFormId, [
+    'label' => 'Refren z Live',
+    'lyrics' => "Zmiana podczas grania\nWidoczna dla zespołu",
+    'chords' => "D A\nh G",
+]);
+$snapshot = $repo->liveSnapshot($eventId, 'pl');
+expectSame('Refren z Live', $snapshot['songs'][0]['form'][0]['label'], 'edycja nazwy części z live');
+expectSame("Zmiana podczas grania\nWidoczna dla zespołu", $snapshot['songs'][0]['form'][0]['lyrics'], 'edycja tekstu części z live');
+expectSame("D A\nh G", $snapshot['songs'][0]['form'][0]['editable_chords'], 'live zachowuje chwyty w tonacji bazowej');
+
+$secondRevisionBefore = (int) $repo->liveSnapshot($secondEventId, 'pl')['revision'];
+$repo->updateLivePartContent($eventId, $firstFormId, [
+    'label' => 'Refren zapisany w źródle',
+    'lyrics' => "Tekst źródłowy z Live\nDla wszystkich wydarzeń",
+    'chords' => "E H\ncis A",
+    'save_to_source' => true,
+]);
+$eventSong = $repo->eventSong($eventSongId);
+expectSame(null, $eventSong['form'][0]['label_override'], 'zapis źródłowy usuwa nadpisanie bieżącej części');
+expectSame('Refren zapisany w źródle', $eventSong['form'][0]['section_label'], 'bieżące wydarzenie dziedziczy zapisane źródło');
+$sourceSong = $repo->song((int) $eventSong['song_id']);
+$sourceSection = array_values(array_filter(
+    $sourceSong['sections'],
+    fn (array $section): bool => (int) $section['id'] === (int) $eventSong['form'][0]['section_id']
+))[0] ?? null;
+expectSame("Tekst źródłowy z Live\nDla wszystkich wydarzeń", $sourceSection['lyrics'] ?? null, 'edycja Live aktualizuje część pieśni źródłowej');
+$secondEventSong = $repo->eventSong($secondEventSongId);
+expectSame('Refren zapisany w źródle', $secondEventSong['form'][0]['section_label'], 'zmiana źródła trafia do innego wydarzenia bez nadpisania');
+expectSame(true, (int) $repo->liveSnapshot($secondEventId, 'pl')['revision'] > $secondRevisionBefore, 'zmiana źródła odświeża inne aktywne repertuary');
 
 $repo->updateLiveSetting($eventId, 'song', $eventSongId, 'transpose_steps', 2);
 $snapshot = $repo->liveSnapshot($eventId, 'intl');
