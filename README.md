@@ -74,13 +74,15 @@ W trybie live pierwsze kliknięcie części oznacza ją jako następną. Drugie 
 
 ## Projekcja na drugim ekranie w Chrome
 
-Skopiuj adres widoku uczestnika z wydarzenia. Dla dodatkowego monitora Full HD ustawionego po prawej stronie głównego ekranu uruchom Chrome w Windows poleceniem:
+W szczegółach dowolnego wydarzenia skopiuj **stały adres ekranu**. Jest wspólny dla całej aplikacji i automatycznie śledzi ostatnią część potwierdzoną jako „Teraz” w dowolnym repertuarze. Nie trzeba zmieniać go przed kolejnymi wydarzeniami. Dla dodatkowego monitora Full HD ustawionego po prawej stronie głównego ekranu uruchom Chrome w Windows poleceniem:
 
 ```powershell
 & "C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk --new-window --window-position=1920,0 "ADRES_WIDOKU_UCZESTNIKA"
 ```
 
 Jeśli główny monitor ma inną szerokość albo projektor znajduje się po lewej stronie, zmień pierwszą wartość `--window-position`. Trybem projekcji sterujesz stale widocznymi przyciskami w Live albo skrótami: `B` — blackout, `G` — samo tło, `T` — tekst. Przyciski `A−` i `A+` zmieniają wielkość tekstu uczestników w zakresie 60–160%; ustawienie zapisuje się w wydarzeniu i synchronizuje ze wszystkimi otwartymi ekranami.
+
+Gotowy skrypt [`uruchom_ekran_uczestnikow.bat`](uruchom_ekran_uczestnikow.bat) uruchamia ten widok w osobnym profilu Chrome i nadaje się do umieszczenia w Autostarcie Windows. Przed użyciem ustaw w nim adres serwera oraz — w razie potrzeby — położenie projektora.
 
 ## Uruchomienie lokalne
 

@@ -16,6 +16,49 @@ if (!$repo->hasUsers() && $route !== 'setup') {
 }
 
 try {
+    if (in_array($route, ['screen', 'api-screen'], true)) {
+        $snapshot = $repo->latestAudienceSnapshot('pl') ?? [
+            'event' => [
+                'id' => null,
+                'name' => 'Stały ekran uczestników',
+                'planned_at' => null,
+                'location' => null,
+                'status' => 'ready',
+                'comment' => null,
+                'background_image' => null,
+                'public_token' => null,
+            ],
+            'state' => [
+                'event_song_id' => null,
+                'current_form_id' => null,
+                'next_form_id' => null,
+                'output_mode' => 'blackout',
+                'audience_font_scale' => 100,
+                'current_sequence' => 0,
+                'revision' => 0,
+                'updated_at' => null,
+            ],
+            'revision' => 0,
+            'songs' => [],
+            'screen_cursor' => 'none',
+        ];
+        if ($route === 'api-screen') {
+            $cursor = (string) ($_GET['cursor'] ?? '');
+            if ($cursor !== '' && $cursor === (string) $snapshot['screen_cursor']) {
+                json_response(['unchanged' => true, 'cursor' => $snapshot['screen_cursor']]);
+            }
+            json_response(['unchanged' => false, 'snapshot' => $snapshot]);
+        }
+        View::render('public', [
+            'title' => 'Stały ekran uczestników',
+            'snapshot' => $snapshot,
+            'globalAudience' => true,
+            'mainClass' => 'audience-page',
+            'bodyClass' => 'audience-body',
+        ], 'projection_layout');
+        exit;
+    }
+
     if ($route === 'setup') {
         if ($repo->hasUsers()) {
             redirect(current_user() ? 'dashboard' : 'login');

@@ -870,6 +870,7 @@
     const next = $('[data-audience-next]', root);
     const connection = $('[data-connection]', root);
     const isOverlay = root.dataset.projectionKind === 'overlay';
+    const isGlobalAudience = root.dataset.projectionKind === 'global';
 
     const findItem = id => {
       for (const song of snapshot.songs) {
@@ -879,11 +880,12 @@
       return null;
     };
     const setBackground = () => {
-      if (isOverlay || !snapshot.event.background_image || !root.dataset.backgroundApi) {
+      if (isOverlay || !snapshot.event.background_image || !snapshot.event.public_token || !root.dataset.backgroundApi) {
         root.style.removeProperty('--audience-background');
         return;
       }
       const background = new URL(root.dataset.backgroundApi, window.location.href);
+      background.searchParams.set('token', snapshot.event.public_token);
       background.searchParams.set('v', snapshot.event.background_image);
       root.style.setProperty('--audience-background', `url("${background.href}")`);
     };
@@ -915,7 +917,8 @@
     const poll = async () => {
       try {
         const query = new URL(root.dataset.api, window.location.href);
-        query.searchParams.set('since', String(snapshot.revision));
+        if (isGlobalAudience) query.searchParams.set('cursor', String(snapshot.screen_cursor || 'none'));
+        else query.searchParams.set('since', String(snapshot.revision));
         const response = await fetch(query);
         if (!response.ok) throw new Error();
         const result = await response.json();

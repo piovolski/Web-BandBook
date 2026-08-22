@@ -198,6 +198,9 @@ $first = $repo->directLive($eventId, $firstFormId, $adminId);
 expectSame('next', $first['action'], 'pierwsze kliknięcie ustawia następną część');
 $second = $repo->directLive($eventId, $firstFormId, $adminId);
 expectSame('now', $second['action'], 'drugie kliknięcie ustawia część graną teraz');
+$latestAudience = $repo->latestAudienceSnapshot('pl');
+expectSame($eventId, $latestAudience['event']['id'] ?? null, 'stały ekran wybiera ostatnie wydarzenie potwierdzone jako teraz');
+expectSame($firstFormId, $latestAudience['state']['current_form_id'] ?? null, 'stały ekran zachowuje ostatnio wyświetloną część');
 $repo->setAudienceMode($eventId, 'blackout', $adminId);
 expectSame('blackout', $repo->liveSnapshot($eventId, 'pl')['state']['output_mode'], 'blackout synchronizuje się z projekcją');
 $repo->setAudienceMode($eventId, 'background', $adminId);
@@ -206,6 +209,13 @@ $repo->setAudienceMode($eventId, 'text', $adminId);
 expectSame('text', $repo->liveSnapshot($eventId, 'pl')['state']['output_mode'], 'tryb tekstu synchronizuje się z projekcją');
 $repo->setAudienceFontScale($eventId, 130, $adminId);
 expectSame(130, $repo->liveSnapshot($eventId, 'pl')['state']['audience_font_scale'], 'wielkość tekstu synchronizuje się z projekcją');
+$secondEventFormId = (int) ($secondEventSong['form'][0]['id'] ?? 0);
+$repo->directLive($secondEventId, $secondEventFormId, $adminId);
+$repo->directLive($secondEventId, $secondEventFormId, $adminId);
+$latestAudience = $repo->latestAudienceSnapshot('pl');
+expectSame($secondEventId, $latestAudience['event']['id'] ?? null, 'stały ekran automatycznie przełącza się między wydarzeniami');
+expectSame($secondEventFormId, $latestAudience['state']['current_form_id'] ?? null, 'stały ekran pokazuje najnowszą potwierdzoną część');
+expectSame(true, str_starts_with((string) ($latestAudience['screen_cursor'] ?? ''), $secondEventId . ':'), 'stały ekran otrzymuje jednoznaczny znacznik synchronizacji');
 
 $repo->updateLivePartContent($eventId, $firstFormId, [
     'label' => 'Refren z Live',

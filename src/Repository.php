@@ -662,20 +662,22 @@ final class Repository
                 $current = $formId;
                 $next = null;
                 $eventSongId = (int) $target['event_song_id'];
+                $currentSequence = (int) $this->db->query('SELECT COALESCE(MAX(current_sequence), 0) + 1 FROM live_states')->fetchColumn();
                 $action = 'now';
             } else {
                 $current = $state['current_form_id'] !== null ? (int) $state['current_form_id'] : null;
                 $next = $formId;
                 $eventSongId = $state['event_song_id'] !== null ? (int) $state['event_song_id'] : null;
+                $currentSequence = (int) ($state['current_sequence'] ?? 0);
                 $action = 'next';
             }
 
             $revision = (int) $state['revision'] + 1;
             $update = $this->db->prepare(
-                'UPDATE live_states SET event_song_id = ?, current_form_id = ?, next_form_id = ?, revision = ?, updated_at = ?, updated_by = ?
+                'UPDATE live_states SET event_song_id = ?, current_form_id = ?, next_form_id = ?, current_sequence = ?, revision = ?, updated_at = ?, updated_by = ?
                  WHERE event_id = ?'
             );
-            $update->execute([$eventSongId, $current, $next, $revision, now(), $userId, $eventId]);
+            $update->execute([$eventSongId, $current, $next, $currentSequence, $revision, now(), $userId, $eventId]);
             $this->touchEvent($eventId, false);
             $this->db->commit();
             return ['action' => $action, 'revision' => $revision];
@@ -883,6 +885,7 @@ final class Repository
                 'next_form_id' => $state['next_form_id'] !== null ? (int) $state['next_form_id'] : null,
                 'output_mode' => in_array(($state['output_mode'] ?? 'text'), ['blackout', 'background', 'text'], true) ? $state['output_mode'] : 'text',
                 'audience_font_scale' => min(160, max(60, (int) ($state['audience_font_scale'] ?? 100))),
+                'current_sequence' => (int) ($state['current_sequence'] ?? 0),
                 'revision' => (int) $state['revision'],
                 'updated_at' => $state['updated_at'],
             ],
@@ -897,6 +900,30 @@ final class Repository
         $statement->execute([$token]);
         $id = $statement->fetchColumn();
         return $id ? $this->event((int) $id) : null;
+    }
+
+    public function latestAudienceSnapshot(string $outputProfile = 'pl'): ?array
+    {
+        $eventId = $this->db->query(
+            'SELECT event_id FROM live_states
+             WHERE current_form_id IS NOT NULL
+             ORDER BY current_sequence DESC, updated_at DESC, event_id DESC
+             LIMIT 1'
+        )->fetchColumn();
+        if ($eventId === false) {
+            return null;
+        }
+
+        $snapshot = $this->liveSnapshot((int) $eventId, $outputProfile);
+        if ($snapshot === null) {
+            return null;
+        }
+        $snapshot['screen_cursor'] = implode(':', [
+            (int) $snapshot['event']['id'],
+            (int) $snapshot['revision'],
+            (int) ($snapshot['state']['current_sequence'] ?? 0),
+        ]);
+        return $snapshot;
     }
 
     /**
@@ -1157,6 +1184,7 @@ final class Repository
             'next_form_id' => null,
             'output_mode' => 'text',
             'audience_font_scale' => 100,
+            'current_sequence' => 0,
             'revision' => 1,
             'updated_at' => now(),
         ];
