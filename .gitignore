@@ -1,0 +1,8 @@
+/storage/*
+!/storage/.gitignore
+/config.local.php
+/.idea/
+/.vscode/
+__pycache__/
+*.py[cod]
+/.import/

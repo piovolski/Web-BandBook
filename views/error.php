@@ -1,0 +1,1 @@
+<div class="empty-state"><span class="empty-icon">!</span><h1><?= e($heading ?? 'Nie udało się otworzyć strony') ?></h1><p><?= e($message ?? 'Sprawdź adres i spróbuj ponownie.') ?></p><a class="button button-primary" href="<?= e(url()) ?>">Wróć do pulpitu</a></div>

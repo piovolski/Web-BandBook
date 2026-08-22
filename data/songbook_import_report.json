@@ -1,0 +1,73 @@
+{
+    "source": "songbook.md",
+    "generated_at": "2026-08-22T19:51:48+00:00",
+    "songs": 257,
+    "sections": 922,
+    "songs_with_warnings": 16,
+    "warnings": {
+        "Ojcze Don Guanella": [
+            "Wykryto układ wielokolumnowy zapisany znakiem „|”."
+        ],
+        "Każdy dzień upewnia, upewnia mnie": [
+            "Wykryto układ wielokolumnowy zapisany znakiem „|”."
+        ],
+        "Kto odczuwa pragnienie": [
+            "Wykryto układ wielokolumnowy zapisany znakiem „|”."
+        ],
+        "Święte Imię Jezus": [
+            "Wykryto układ wielokolumnowy zapisany znakiem „|”."
+        ],
+        "Przyjdź jak deszcz": [
+            "Wykryto układ wielokolumnowy zapisany znakiem „|”."
+        ],
+        "Przyjdź jak deszcz (wersja 2)": [
+            "Wykryto układ wielokolumnowy zapisany znakiem „|”.",
+            "Powtórzony tytuł źródłowy: Przyjdź jak deszcz."
+        ],
+        "Tobie chwała": [
+            "Wykryto układ wielokolumnowy zapisany znakiem „|”."
+        ],
+        "Dziękuję (wersja 2)": [
+            "Powtórzony tytuł źródłowy: Dziękuję."
+        ],
+        "The Blessing": [
+            "Wykryto układ wielokolumnowy zapisany znakiem „|”."
+        ],
+        "Zbudowani na Chrystusie": [
+            "Wykryto układ wielokolumnowy zapisany znakiem „|”."
+        ],
+        "Jesteś  - Małe TGD": [
+            "Wykryto układ wielokolumnowy zapisany znakiem „|”."
+        ],
+        "Memu Bogu królowi": [
+            "Wykryto układ wielokolumnowy zapisany znakiem „|”."
+        ],
+        "Sprawiedliwy jesteś Duchu": [
+            "Wykryto układ wielokolumnowy zapisany znakiem „|”."
+        ],
+        "Ofiaruję Panie Ci (wersja 2)": [
+            "Powtórzony tytuł źródłowy: Ofiaruję Panie Ci."
+        ],
+        "Pan jest Pasterzem moim (wersja 2)": [
+            "Powtórzony tytuł źródłowy: Pan jest Pasterzem moim."
+        ],
+        "Oto są baranki młode": [
+            "Wykryto układ wielokolumnowy zapisany znakiem „|”."
+        ]
+    },
+    "categories": {
+        "Módl się śpiewem": 3,
+        "Śpiewem radujmy innych": 143,
+        "Duchu napełnij życie me": 9,
+        "Ofiaruję Panie Ci cały mój świat": 11,
+        "Pasterzu czuwaj zawsze przy mnie": 4,
+        "Z Maryją przez świat": 10,
+        "Nie siedź tyle tylko rusz się": 16,
+        "Prawdziwe Dyskotekowe hity ciszy": 21,
+        "Tradycja zawsze na czasie": 16,
+        "Wielki Post": 9,
+        "Wielkanoc": 3,
+        "Inności piękności": 4,
+        "Części stałe": 8
+    }
+}
