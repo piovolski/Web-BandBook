@@ -66,13 +66,16 @@ try {
         exit;
     }
 
-    if ($route === 'public' || $route === 'overlay' || $route === 'api-public') {
+    if (in_array($route, ['public', 'overlay', 'api-public', 'event-background'], true)) {
         $token = (string) ($_GET['token'] ?? '');
         $event = $repo->eventByToken($token);
         if ($event === null) {
             http_response_code(404);
             View::render('error', ['title' => 'Nie znaleziono', 'heading' => 'Ten widok nie jest dostępny', 'message' => 'Link jest nieprawidłowy albo został wyłączony.', 'mainClass' => 'audience-page']);
             exit;
+        }
+        if ($route === 'event-background') {
+            serve_event_background($event['background_image'] ?? null);
         }
         $snapshot = $repo->liveSnapshot((int) $event['id'], 'pl');
         if ($route === 'api-public') {
@@ -83,9 +86,9 @@ try {
             json_response(['unchanged' => false, 'snapshot' => $snapshot]);
         }
         if ($route === 'overlay') {
-            View::render('overlay', ['title' => 'OBS — ' . $event['name'], 'snapshot' => $snapshot, 'mainClass' => 'overlay-page', 'bodyClass' => 'overlay-body']);
+            View::render('overlay', ['title' => 'OBS — ' . $event['name'], 'snapshot' => $snapshot, 'mainClass' => 'overlay-page', 'bodyClass' => 'overlay-body'], 'projection_layout');
         } else {
-            View::render('public', ['title' => $event['name'], 'snapshot' => $snapshot, 'mainClass' => 'audience-page']);
+            View::render('public', ['title' => $event['name'], 'snapshot' => $snapshot, 'mainClass' => 'audience-page', 'bodyClass' => 'audience-body'], 'projection_layout');
         }
         exit;
     }
@@ -160,11 +163,24 @@ try {
         $error = null;
         if ($method === 'POST') {
             verify_csrf();
+            $oldBackground = $event['background_image'] ?? null;
+            $newUpload = null;
             try {
-                $savedId = $repo->saveEvent($id, $_POST + ['id' => $id]);
+                $backgroundImage = !empty($_POST['clear_background']) ? null : $oldBackground;
+                $newUpload = store_event_background($_FILES['background_image'] ?? null);
+                if ($newUpload !== null) {
+                    $backgroundImage = $newUpload;
+                }
+                $savedId = $repo->saveEvent($id, $_POST + ['id' => $id, 'background_image' => $backgroundImage]);
+                if ($oldBackground && $oldBackground !== $backgroundImage) {
+                    delete_event_background((string) $oldBackground);
+                }
                 flash($id ? 'Wydarzenie zostało zaktualizowane.' : 'Wydarzenie zostało utworzone.');
                 redirect('event', ['id' => $savedId]);
             } catch (Throwable $exception) {
+                if ($newUpload !== null && $newUpload !== $oldBackground) {
+                    delete_event_background($newUpload);
+                }
                 $error = $exception->getMessage();
                 $event = array_merge($event ?: [], $_POST);
             }
@@ -325,6 +341,14 @@ try {
         json_response(['ok' => true] + $result);
     }
 
+    if ($route === 'api-live-output' && $method === 'POST') {
+        verify_csrf();
+        $payload = request_json();
+        $eventId = (int) ($_GET['id'] ?? 0);
+        $repo->setAudienceMode($eventId, (string) ($payload['mode'] ?? ''), (int) $user['id']);
+        json_response(['ok' => true]);
+    }
+
     if ($route === 'api-live-setting' && $method === 'POST') {
         verify_csrf();
         $payload = request_json();
@@ -383,4 +407,74 @@ function request_json(): array
 {
     $payload = json_decode((string) file_get_contents('php://input'), true);
     return is_array($payload) ? $payload : [];
+}
+
+function event_background_directory(): string
+{
+    return dirname(__DIR__) . '/storage/backgrounds';
+}
+
+function store_event_background(?array $file): ?string
+{
+    if (!$file || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+        return null;
+    }
+    if ((int) ($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+        throw new RuntimeException('Nie udało się przesłać zdjęcia tła.');
+    }
+    if ((int) ($file['size'] ?? 0) <= 0 || (int) $file['size'] > 12 * 1024 * 1024) {
+        throw new RuntimeException('Zdjęcie tła może mieć maksymalnie 12 MB.');
+    }
+    $temporaryPath = (string) ($file['tmp_name'] ?? '');
+    $imageInfo = @getimagesize($temporaryPath);
+    $mime = is_array($imageInfo) ? ($imageInfo['mime'] ?? '') : '';
+    $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+    if (!isset($extensions[$mime])) {
+        throw new RuntimeException('Tło musi być obrazem JPEG, PNG lub WebP.');
+    }
+    if ((int) ($imageInfo[0] ?? 0) > 12000 || (int) ($imageInfo[1] ?? 0) > 12000) {
+        throw new RuntimeException('Zdjęcie tła ma zbyt dużą rozdzielczość.');
+    }
+    $directory = event_background_directory();
+    if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
+        throw new RuntimeException('Nie można utworzyć katalogu na tła wydarzeń.');
+    }
+    $filename = bin2hex(random_bytes(20)) . '.' . $extensions[$mime];
+    if (!move_uploaded_file($temporaryPath, $directory . '/' . $filename)) {
+        throw new RuntimeException('Nie udało się zapisać zdjęcia tła.');
+    }
+    return $filename;
+}
+
+function delete_event_background(string $filename): void
+{
+    if ($filename === '' || basename($filename) !== $filename) {
+        return;
+    }
+    $path = event_background_directory() . '/' . $filename;
+    if (is_file($path)) {
+        @unlink($path);
+    }
+}
+
+function serve_event_background(mixed $filename): never
+{
+    $filename = is_string($filename) ? $filename : '';
+    $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    $types = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp'];
+    if ($filename === '' || basename($filename) !== $filename || !isset($types[$extension])) {
+        http_response_code(404);
+        exit;
+    }
+    $path = event_background_directory() . '/' . $filename;
+    if (!is_file($path)) {
+        http_response_code(404);
+        exit;
+    }
+    header('Content-Type: ' . $types[$extension]);
+    header('Content-Length: ' . filesize($path));
+    header('Cache-Control: public, max-age=86400');
+    header('X-Content-Type-Options: nosniff');
+    readfile($path);
+    exit;
 }

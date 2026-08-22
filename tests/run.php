@@ -130,6 +130,7 @@ $eventId = $repo->saveEvent(null, [
     'location' => 'Sala',
     'status' => 'ready',
     'comment' => 'Test repertuaru',
+    'background_image' => 'test-background.jpg',
 ]);
 $eventSongId = $repo->addSongToEvent($eventId, (int) $songs[0]['id']);
 $eventSong = $repo->eventSong($eventSongId);
@@ -189,11 +190,19 @@ expectSame($eventSong['form'][0]['source_lyrics'], $secondEventSong['form'][0]['
 
 $snapshot = $repo->liveSnapshot($eventId, 'pl');
 $firstFormId = (int) $snapshot['songs'][0]['form'][0]['id'];
+expectSame('test-background.jpg', $snapshot['event']['background_image'], 'tło wydarzenia trafia do widoku projekcyjnego');
+expectSame('text', $snapshot['state']['output_mode'], 'nowe wydarzenie domyślnie pokazuje tekst');
 expectSame('Zwrotka próbna', $snapshot['songs'][0]['form'][0]['label'], 'nadpisana część trafia do widoku live');
 $first = $repo->directLive($eventId, $firstFormId, $adminId);
 expectSame('next', $first['action'], 'pierwsze kliknięcie ustawia następną część');
 $second = $repo->directLive($eventId, $firstFormId, $adminId);
 expectSame('now', $second['action'], 'drugie kliknięcie ustawia część graną teraz');
+$repo->setAudienceMode($eventId, 'blackout', $adminId);
+expectSame('blackout', $repo->liveSnapshot($eventId, 'pl')['state']['output_mode'], 'blackout synchronizuje się z projekcją');
+$repo->setAudienceMode($eventId, 'background', $adminId);
+expectSame('background', $repo->liveSnapshot($eventId, 'pl')['state']['output_mode'], 'tryb samego tła synchronizuje się z projekcją');
+$repo->setAudienceMode($eventId, 'text', $adminId);
+expectSame('text', $repo->liveSnapshot($eventId, 'pl')['state']['output_mode'], 'tryb tekstu synchronizuje się z projekcją');
 
 $repo->updateLivePartContent($eventId, $firstFormId, [
     'label' => 'Refren z Live',

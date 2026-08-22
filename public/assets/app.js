@@ -630,6 +630,7 @@
     const connection = $('[data-connection]', root);
     const follow = $('[data-follow-current]', root);
     const notation = $('[data-live-notation]', root);
+    const outputSwitch = $('[data-live-output-switch]', root);
     const csrf = root.dataset.csrf;
 
     const request = async (url, options = {}) => {
@@ -645,6 +646,11 @@
     const songById = id => snapshot.songs.find(song => song.id === Number(id));
 
     const render = () => {
+      $$('[data-output-mode]', outputSwitch).forEach(button => {
+        const active = button.dataset.outputMode === (snapshot.state.output_mode || 'text');
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
       if (follow.checked && snapshot.state.event_song_id) selectedSong = snapshot.state.event_song_id;
       nav.innerHTML = snapshot.songs.length ? snapshot.songs.map((song, index) => {
         const active = song.id === Number(selectedSong) ? 'active' : '';
@@ -716,6 +722,27 @@
       finally { busy = false; await poll(true); }
     };
 
+    const setOutputMode = async mode => {
+      if (busy || mode === snapshot.state.output_mode) return;
+      busy = true;
+      $$('[data-output-mode]', outputSwitch).forEach(button => { button.disabled = true; });
+      try {
+        await request(root.dataset.outputApi, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','X-CSRF-Token':csrf},
+          body: JSON.stringify({mode}),
+        });
+        snapshot.state.output_mode = mode;
+        setConnection(true);
+        render();
+      } catch { setConnection(false); }
+      finally {
+        busy = false;
+        $$('[data-output-mode]', outputSwitch).forEach(button => { button.disabled = false; });
+        await poll(true);
+      }
+    };
+
     const savePart = async card => {
       const saveToSource = $('[data-live-save-source]', card).checked;
       if (saveToSource && !window.confirm('Zapisać tę część w pieśni źródłowej? Zmiana pojawi się w bibliotece i innych wydarzeniach, które nie mają własnego nadpisania.')) return;
@@ -738,6 +765,11 @@
     };
 
     root.addEventListener('click', async event => {
+      const outputMode = event.target.closest('[data-output-mode]');
+      if (outputMode) {
+        await setOutputMode(outputMode.dataset.outputMode);
+        return;
+      }
       const select = event.target.closest('[data-select-song]');
       if (select) { selectedSong = Number(select.dataset.selectSong); follow.checked = false; render(); return; }
       const delta = event.target.closest('[data-live-delta]');
@@ -786,6 +818,15 @@
       if (setting) saveSetting(setting.dataset.scope, Number(setting.dataset.id), setting.dataset.field, setting.value);
     });
     notation.addEventListener('change', () => poll(true));
+    document.addEventListener('keydown', event => {
+      if (event.ctrlKey || event.altKey || event.metaKey || event.repeat) return;
+      if (event.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+      const mode = {b: 'blackout', g: 'background', t: 'text'}[event.key.toLocaleLowerCase('pl')];
+      if (mode) {
+        event.preventDefault();
+        setOutputMode(mode);
+      }
+    });
     render();
     setInterval(poll, 1000);
   }
@@ -798,6 +839,7 @@
     const stage = $('[data-audience-stage]', root);
     const next = $('[data-audience-next]', root);
     const connection = $('[data-connection]', root);
+    const isOverlay = root.dataset.projectionKind === 'overlay';
 
     const findItem = id => {
       for (const song of snapshot.songs) {
@@ -806,15 +848,36 @@
       }
       return null;
     };
+    const setBackground = () => {
+      if (isOverlay || !snapshot.event.background_image || !root.dataset.backgroundApi) {
+        root.style.removeProperty('--audience-background');
+        return;
+      }
+      const background = new URL(root.dataset.backgroundApi, window.location.href);
+      background.searchParams.set('v', snapshot.event.background_image);
+      root.style.setProperty('--audience-background', `url("${background.href}")`);
+    };
     const render = () => {
       const current = findItem(snapshot.state.current_form_id);
       const upcoming = findItem(snapshot.state.next_form_id);
-      if (!current) {
-        stage.innerHTML = '<div class="audience-wait"><span>♪</span><h1>Za chwilę zaczynamy</h1><p>Tekst pojawi się tutaj, gdy prowadzący wskaże pierwszą część.</p></div>';
+      const mode = snapshot.state.output_mode || 'text';
+      root.classList.toggle('mode-blackout', mode === 'blackout');
+      root.classList.toggle('mode-background', mode === 'background');
+      root.classList.toggle('mode-text', mode === 'text');
+      setBackground();
+      if (isOverlay) {
+        stage.innerHTML = mode === 'text' && current
+          ? `<article class="audience-content"><p class="eyebrow">${escapeHtml(current.song.title)}</p><h1>${escapeHtml(current.item.label)}</h1><div class="audience-lyrics">${String(current.item.lyrics).split(/\r?\n/).map(line => `<p>${escapeHtml(line) || '&nbsp;'}</p>`).join('')}</div></article>`
+          : '';
+      } else if (mode === 'text' && current) {
+        const lines = String(current.item.lyrics || '').split(/\r?\n/);
+        const visibleLines = lines.filter(line => line.trim() !== '').length;
+        const sizeClass = visibleLines > 8 ? 'compact' : (visibleLines > 5 ? 'medium' : 'large');
+        stage.innerHTML = `<div class="projection-text ${sizeClass}">${lines.map(line => `<p class="projection-line">${escapeHtml(line) || '&nbsp;'}</p>`).join('')}</div>`;
       } else {
-        stage.innerHTML = `<article class="audience-content"><p class="eyebrow">${escapeHtml(current.song.title)}</p><h1>${escapeHtml(current.item.label)}</h1><div class="audience-lyrics">${String(current.item.lyrics).split(/\r?\n/).map(line => `<p>${escapeHtml(line) || '&nbsp;'}</p>`).join('')}</div></article>`;
+        stage.innerHTML = '';
       }
-      next.textContent = upcoming ? `Następna: ${upcoming.song.title} · ${upcoming.item.label}` : '';
+      if (next) next.textContent = upcoming ? `Następna: ${upcoming.song.title} · ${upcoming.item.label}` : '';
     };
     const poll = async () => {
       try {
@@ -823,14 +886,13 @@
         const response = await fetch(query);
         if (!response.ok) throw new Error();
         const result = await response.json();
-        connection.className = 'connection online'; connection.innerHTML = '<i></i> Połączono';
+        if (connection) { connection.className = 'connection online'; connection.innerHTML = '<i></i> Połączono'; }
         if (!result.unchanged) { snapshot = result.snapshot; render(); }
       } catch {
-        connection.className = 'connection offline'; connection.innerHTML = '<i></i> Brak połączenia';
+        if (connection) { connection.className = 'connection offline'; connection.innerHTML = '<i></i> Brak połączenia'; }
       }
     };
-    $('[data-fullscreen]', root)?.addEventListener('click', () => document.documentElement.requestFullscreen?.());
     render();
-    setInterval(poll, 1000);
+    setInterval(poll, 500);
   }
 })();

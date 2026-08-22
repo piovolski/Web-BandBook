@@ -18,7 +18,7 @@ BandBook to samodzielna aplikacja PHP dla zespołu muzycznego. Pozwala zarządza
 - pełny podgląd tekstu, chwytów i domyślnej formy bez opuszczania wydarzenia;
 - tryb live ze stanem „następna” i „teraz” potwierdzanym dwoma kliknięciami;
 - edycja części podczas grania, opcjonalny zapis zmian do pieśni źródłowej i synchronizacja urządzeń co około sekundę;
-- publiczny widok tekstu z linkiem dla uczestników i trybem pełnoekranowym;
+- czysty ekran projekcyjny z linkiem dla uczestników oraz trybami Blackout, samo tło i tekst aktualnej części;
 - przezroczysta nakładka tekstowa do dodania w OBS jako Browser Source;
 - konto administratora tworzone przy pierwszym uruchomieniu;
 - opcjonalna biblioteka startowa: 257 pozycji ze Śpiewnika guanelliańskiego oraz 632 rekordy OpenLP;
@@ -71,6 +71,16 @@ Pusta baza musi już istnieć. Tabele są tworzone automatycznie przy pierwszym 
 Adres nakładki OBS znajduje się obok publicznego linku wydarzenia. Dodaj go w OBS jako **Browser Source** i ustaw rozdzielczość zgodną z transmisją. Tło nakładki jest przezroczyste.
 
 W trybie live pierwsze kliknięcie części oznacza ją jako następną. Drugie kliknięcie tej samej części potwierdza ją jako graną teraz.
+
+## Projekcja na drugim ekranie w Chrome
+
+Skopiuj adres widoku uczestnika z wydarzenia. Dla dodatkowego monitora Full HD ustawionego po prawej stronie głównego ekranu uruchom Chrome w Windows poleceniem:
+
+```powershell
+& "C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk --new-window --window-position=1920,0 "ADRES_WIDOKU_UCZESTNIKA"
+```
+
+Jeśli główny monitor ma inną szerokość albo projektor znajduje się po lewej stronie, zmień pierwszą wartość `--window-position`. Trybem projekcji sterujesz stale widocznymi przyciskami w Live albo skrótami: `B` — blackout, `G` — samo tło, `T` — tekst.
 
 ## Uruchomienie lokalne
 

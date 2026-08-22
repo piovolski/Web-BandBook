@@ -386,8 +386,8 @@ final class Repository
         $timestamp = now();
         if ($id === null) {
             $statement = $this->db->prepare(
-                'INSERT INTO events (name, planned_at, location, status, comment, public_token, live_revision, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)'
+                'INSERT INTO events (name, planned_at, location, status, comment, background_image, public_token, live_revision, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)'
             );
             $statement->execute([
                 $name,
@@ -395,6 +395,7 @@ final class Repository
                 $this->nullable($data['location'] ?? null),
                 $this->validStatus((string) ($data['status'] ?? 'draft')),
                 $this->nullable($data['comment'] ?? null),
+                $this->nullable($data['background_image'] ?? null),
                 bin2hex(random_bytes(24)),
                 $timestamp,
                 $timestamp,
@@ -407,7 +408,7 @@ final class Repository
             $state->execute([$id, $timestamp, current_user()['id'] ?? null]);
         } else {
             $statement = $this->db->prepare(
-                'UPDATE events SET name = ?, planned_at = ?, location = ?, status = ?, comment = ?, updated_at = ? WHERE id = ?'
+                'UPDATE events SET name = ?, planned_at = ?, location = ?, status = ?, comment = ?, background_image = ?, updated_at = ? WHERE id = ?'
             );
             $statement->execute([
                 $name,
@@ -415,6 +416,7 @@ final class Repository
                 $this->nullable($data['location'] ?? null),
                 $this->validStatus((string) ($data['status'] ?? 'draft')),
                 $this->nullable($data['comment'] ?? null),
+                $this->nullable($data['background_image'] ?? null),
                 $timestamp,
                 $id,
             ]);
@@ -725,6 +727,24 @@ final class Repository
         $this->touchEvent($eventId);
     }
 
+    public function setAudienceMode(int $eventId, string $mode, int $userId): void
+    {
+        if (!in_array($mode, ['blackout', 'background', 'text'], true)) {
+            throw new RuntimeException('Nieprawidłowy tryb ekranu uczestników.');
+        }
+        if ($this->event($eventId) === null) {
+            throw new RuntimeException('Nie znaleziono wydarzenia.');
+        }
+        $this->liveState($eventId);
+        $statement = $this->db->prepare(
+            'UPDATE live_states
+             SET output_mode = ?, revision = revision + 1, updated_at = ?, updated_by = ?
+             WHERE event_id = ?'
+        );
+        $statement->execute([$mode, now(), $userId, $eventId]);
+        $this->touchEvent($eventId, false);
+    }
+
     public function updateLivePartContent(int $eventId, int $formId, array $data): void
     {
         $check = $this->db->prepare(
@@ -836,12 +856,14 @@ final class Repository
                 'location' => $event['location'],
                 'status' => $event['status'],
                 'comment' => $event['comment'],
+                'background_image' => $event['background_image'],
                 'public_token' => $event['public_token'],
             ],
             'state' => [
                 'event_song_id' => $state['event_song_id'] !== null ? (int) $state['event_song_id'] : null,
                 'current_form_id' => $state['current_form_id'] !== null ? (int) $state['current_form_id'] : null,
                 'next_form_id' => $state['next_form_id'] !== null ? (int) $state['next_form_id'] : null,
+                'output_mode' => in_array(($state['output_mode'] ?? 'text'), ['blackout', 'background', 'text'], true) ? $state['output_mode'] : 'text',
                 'revision' => (int) $state['revision'],
                 'updated_at' => $state['updated_at'],
             ],
@@ -1105,15 +1127,16 @@ final class Repository
             return $state;
         }
         $insert = $this->db->prepare(
-            'INSERT INTO live_states (event_id, event_song_id, current_form_id, next_form_id, revision, updated_at, updated_by)
-             VALUES (?, NULL, NULL, NULL, 1, ?, NULL)'
+            'INSERT INTO live_states (event_id, event_song_id, current_form_id, next_form_id, output_mode, revision, updated_at, updated_by)
+             VALUES (?, NULL, NULL, NULL, ?, 1, ?, NULL)'
         );
-        $insert->execute([$eventId, now()]);
+        $insert->execute([$eventId, 'text', now()]);
         return [
             'event_id' => $eventId,
             'event_song_id' => null,
             'current_form_id' => null,
             'next_form_id' => null,
+            'output_mode' => 'text',
             'revision' => 1,
             'updated_at' => now(),
         ];

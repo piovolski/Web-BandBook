@@ -117,6 +117,7 @@ final class Database
                 location VARCHAR(240) NULL,
                 status VARCHAR(32) NOT NULL DEFAULT 'draft',
                 comment {$text} NULL,
+                background_image VARCHAR(255) NULL,
                 public_token VARCHAR(80) NOT NULL UNIQUE,
                 live_revision {$integer} NOT NULL DEFAULT 1,
                 created_at VARCHAR(32) NOT NULL,
@@ -151,6 +152,7 @@ final class Database
                 event_song_id {$integer} NULL,
                 current_form_id {$integer} NULL,
                 next_form_id {$integer} NULL,
+                output_mode VARCHAR(20) NOT NULL DEFAULT 'text',
                 revision {$integer} NOT NULL DEFAULT 1,
                 updated_at VARCHAR(32) NOT NULL,
                 updated_by {$integer} NULL,
@@ -178,6 +180,8 @@ final class Database
         self::ensureColumn($pdo, 'event_song_form_items', 'label_override', 'VARCHAR(160) NULL');
         self::ensureColumn($pdo, 'event_song_form_items', 'lyrics_override', $text . ' NULL');
         self::ensureColumn($pdo, 'event_song_form_items', 'chords_override', $text . ' NULL');
+        self::ensureColumn($pdo, 'events', 'background_image', 'VARCHAR(255) NULL');
+        self::ensureColumn($pdo, 'live_states', 'output_mode', "VARCHAR(20) NOT NULL DEFAULT 'text'");
         self::backfillCategories($pdo);
     }
 
