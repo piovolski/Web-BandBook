@@ -238,6 +238,194 @@
     render();
   }
 
+  const songBrowser = $('[data-song-browser]');
+  if (songBrowser) initSongBrowser(songBrowser);
+
+  function initSongBrowser(root) {
+    const songs = parseJsonScript('[data-song-browser-data]') || [];
+    const results = $('[data-browser-results]', root);
+    const preview = $('[data-song-preview]', root);
+    const resultCount = $('[data-browser-result-count]', root);
+    const more = $('[data-browser-more]', root);
+    const search = $('[data-browser-search]', root);
+    const repertoire = $('[data-repertoire-list]', root);
+    const repertoireCount = $('[data-repertoire-count]', root);
+    const repertoireEmpty = $('[data-repertoire-empty]', root);
+    const storageKey = `bandbook-browser:${root.dataset.addApi}`;
+    let selectedCategory = 'all';
+    let selectedSongId = null;
+
+    const normalize = value => String(value || '')
+      .toLocaleLowerCase('pl')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const songSearchText = song => normalize([
+      song.title,
+      song.alt_title,
+      song.first_lyrics,
+      song.authors,
+      ...(song.categories || []).map(category => category.name),
+    ].join(' '));
+    songs.forEach(song => { song.searchText = songSearchText(song); });
+
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(storageKey) || '{}');
+      search.value = saved.query || '';
+      selectedCategory = saved.category || 'all';
+    } catch {}
+
+    const categoryPosition = (song, categoryId) => {
+      const category = (song.categories || []).find(item => String(item.id) === String(categoryId));
+      return category ? Number(category.position) : Number.MAX_SAFE_INTEGER;
+    };
+
+    const filteredSongs = () => {
+      const query = normalize(search.value);
+      const filtered = songs.filter(song => {
+        if (query && !song.searchText.includes(query)) return false;
+        if (selectedCategory === 'with-chords' && !song.has_chords) return false;
+        if (selectedCategory === 'without-chords' && song.has_chords) return false;
+        if (!['all', 'with-chords', 'without-chords'].includes(selectedCategory)
+          && !(song.categories || []).some(category => String(category.id) === selectedCategory)) return false;
+        return true;
+      });
+      if (!['all', 'with-chords', 'without-chords'].includes(selectedCategory)) {
+        filtered.sort((a, b) => categoryPosition(a, selectedCategory) - categoryPosition(b, selectedCategory));
+      } else {
+        filtered.sort((a, b) => String(a.title).localeCompare(String(b.title), 'pl'));
+      }
+      return filtered;
+    };
+
+    const renderResults = () => {
+      const filtered = filteredSongs();
+      const visible = filtered.slice(0, 80);
+      resultCount.textContent = filtered.length === 1 ? '1 pieśń' : `${filtered.length} pieśni`;
+      results.innerHTML = visible.length ? visible.map(song => {
+        const categories = (song.categories || []).filter(item => item.group !== 'source').slice(0, 2);
+        const used = Number(song.event_uses) > 0 ? `<span class="browser-used">W repertuarze${song.event_uses > 1 ? ` ×${song.event_uses}` : ''}</span>` : '';
+        const selected = Number(song.id) === Number(selectedSongId) ? 'selected' : '';
+        const firstLine = String(song.first_lyrics || '').split(/\r?\n/).find(Boolean) || 'Brak podglądu tekstu';
+        return `<article class="browser-song-row ${selected}" data-browser-song-row="${song.id}">
+          <button class="browser-song-open" type="button" data-preview-song="${song.id}">
+            <span class="browser-song-key">${escapeHtml(song.source_key || '—')}</span>
+            <span class="browser-song-copy"><strong>${escapeHtml(song.title)}</strong><small>${escapeHtml(song.authors || song.alt_title || firstLine)}</small><span class="browser-tags">${categories.map(item => `<i>${escapeHtml(item.name)}</i>`).join('')}${song.has_chords ? '<i class="has-chords">chwyty</i>' : '<i>tekst</i>'}${used}</span></span>
+          </button>
+          <button class="quick-add" type="button" data-add-song="${song.id}" title="Dodaj do repertuaru">+</button>
+        </article>`;
+      }).join('') : '<div class="browser-empty"><span>⌕</span><h3>Brak wyników</h3><p>Zmień kategorię lub wpisz inne słowo.</p></div>';
+      more.hidden = filtered.length <= visible.length;
+      more.textContent = filtered.length > visible.length ? `Pokazano pierwsze ${visible.length} z ${filtered.length} wyników. Zawęź wyszukiwanie.` : '';
+      try { sessionStorage.setItem(storageKey, JSON.stringify({query: search.value, category: selectedCategory})); } catch {}
+    };
+
+    const previewPart = (section, index) => {
+      const lyricLines = String(section.lyrics || '').split(/\r?\n/);
+      const chordLines = String(section.chords || '').split(/\r?\n/);
+      const lines = lyricLines.map((line, lineIndex) => `<div class="preview-line"><span>${escapeHtml(chordLines[lineIndex] || '') || '&nbsp;'}</span><p>${escapeHtml(line) || '&nbsp;'}</p></div>`).join('');
+      return `<section class="preview-part"><header><b>${index + 1}</b><strong>${escapeHtml(section.label)}</strong><small>${escapeHtml(section.type)}</small></header><div class="preview-lines">${lines}</div>${section.comment ? `<p class="preview-comment">${escapeHtml(section.comment)}</p>` : ''}</section>`;
+    };
+
+    const loadPreview = async songId => {
+      selectedSongId = Number(songId);
+      renderResults();
+      preview.innerHTML = '<div class="preview-placeholder"><span class="preview-spinner">◌</span><h3>Wczytywanie…</h3></div>';
+      try {
+        const url = new URL(root.dataset.previewApi, window.location.href);
+        url.searchParams.set('id', String(songId));
+        const response = await fetch(url);
+        if (!response.ok) throw new Error();
+        const {song} = await response.json();
+        const sections = new Map((song.sections || []).map(section => [Number(section.id), section]));
+        const formSections = (song.form || []).map(item => sections.get(Number(item.section_id))).filter(Boolean);
+        const ordered = formSections.length ? formSections : (song.sections || []);
+        const badges = (song.categories || []).map(item => `<span>${escapeHtml(item.name)}</span>`).join('');
+        preview.innerHTML = `<div class="preview-head"><div><p class="eyebrow">Podgląd pieśni</p><h2>${escapeHtml(song.title)}</h2><p>${escapeHtml(song.authors || song.alt_title || '')}</p></div><button class="button button-primary" type="button" data-add-song="${song.id}">Dodaj</button></div>
+          <div class="preview-meta"><span>Tonacja <b>${escapeHtml(song.source_key || '—')}</b></span><span>Tempo <b>${escapeHtml(song.bpm || '—')} BPM</b></span><span>Forma <b>${ordered.length} części</b></span></div>
+          <div class="preview-badges">${badges}</div>
+          <div class="preview-form">${ordered.map(previewPart).join('')}</div>`;
+      } catch {
+        preview.innerHTML = '<div class="preview-placeholder"><span>!</span><h3>Nie udało się wczytać pieśni</h3><p>Spróbuj ponownie.</p></div>';
+      }
+    };
+
+    const refreshRepertoireControls = () => {
+      const items = $$('[data-repertoire-item]', repertoire);
+      items.forEach((item, index) => {
+        $('.repertoire-number', item).textContent = String(index + 1);
+        const up = $('[data-move-up]', item);
+        const down = $('[data-move-down]', item);
+        if (up) up.disabled = index === 0;
+        if (down) down.disabled = index === items.length - 1;
+      });
+      repertoireCount.textContent = String(items.length);
+      repertoireEmpty.hidden = items.length > 0;
+    };
+
+    const notify = message => {
+      const node = document.createElement('div');
+      node.className = 'flash';
+      node.setAttribute('role', 'status');
+      node.textContent = message;
+      document.body.append(node);
+      setTimeout(() => node.remove(), 2200);
+    };
+
+    const addSong = async (songId, button) => {
+      const song = songs.find(item => Number(item.id) === Number(songId));
+      if (!song) return;
+      let allowDuplicate = false;
+      if (Number(song.event_uses) > 0) {
+        allowDuplicate = window.confirm(`„${song.title}” jest już w repertuarze. Dodać ją ponownie?`);
+        if (!allowDuplicate) return;
+      }
+      const previous = button?.textContent;
+      if (button) { button.disabled = true; button.textContent = '…'; }
+      try {
+        const response = await fetch(root.dataset.addApi, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'X-CSRF-Token': root.dataset.csrf},
+          body: JSON.stringify({song_id: song.id, allow_duplicate: allowDuplicate}),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Nie udało się dodać pieśni.');
+        repertoire.insertAdjacentHTML('beforeend', result.html);
+        song.event_uses = Number(song.event_uses) + 1;
+        refreshRepertoireControls();
+        renderResults();
+        notify('Pieśń została dodana do repertuaru.');
+      } catch (error) {
+        window.alert(error.message || 'Nie udało się dodać pieśni.');
+      } finally {
+        if (button) { button.disabled = false; button.textContent = previous; }
+      }
+    };
+
+    root.addEventListener('click', event => {
+      const category = event.target.closest('[data-category]');
+      if (category) {
+        selectedCategory = category.dataset.category;
+        $$('[data-category]', root).forEach(button => button.classList.toggle('active', button === category));
+        renderResults();
+        return;
+      }
+      const open = event.target.closest('[data-preview-song]');
+      if (open) { loadPreview(open.dataset.previewSong); return; }
+      const add = event.target.closest('[data-add-song]');
+      if (add) addSong(add.dataset.addSong, add);
+    });
+    search.addEventListener('input', renderResults);
+    const savedCategory = $(`[data-category="${CSS.escape(selectedCategory)}"]`, root);
+    if (savedCategory) {
+      $$('[data-category]', root).forEach(button => button.classList.toggle('active', button === savedCategory));
+    } else {
+      selectedCategory = 'all';
+    }
+    renderResults();
+  }
+
   const liveApp = $('[data-live-app]');
   if (liveApp) initLive(liveApp);
 

@@ -54,6 +54,24 @@ $secondImport = $repo->seedSongbook();
 expectSame(0, $secondImport['imported'], 'ponowny import nie tworzy duplikatów');
 expectSame(889, $secondImport['skipped'], 'ponowny import pomija istniejące tytuły');
 
+$categories = $repo->categories();
+expectSame(17, count($categories), 'utworzenie działów, źródeł i śpiewników');
+$sectionCategory = array_values(array_filter(
+    $categories,
+    fn (array $category): bool => $category['name'] === 'Śpiewem radujmy innych'
+))[0] ?? null;
+expectSame(143, (int) ($sectionCategory['song_count'] ?? 0), 'odtworzenie liczebności działu guanelliańskiego');
+$browserSongs = $repo->songBrowser(0);
+expectSame(889, count($browserSongs), 'przeglądarka obejmuje pełną bibliotekę');
+$sunrise = array_values(array_filter(
+    $browserSongs,
+    fn (array $song): bool => $song['title'] === 'Każdy wschód słońca'
+))[0] ?? null;
+expectSame(true, (bool) ($sunrise['has_chords'] ?? false), 'filtr dostępności chwytów');
+expectSame('Śpiewem radujmy innych', $sunrise['categories'][0]['name'] ?? null, 'przypisanie pieśni do oryginalnego działu');
+$sunrisePreview = $repo->songPreview((int) ($sunrise['id'] ?? 0));
+expectSame(11, count($sunrisePreview['form'] ?? []), 'podgląd zachowuje pełną domyślną formę');
+
 $eventId = $repo->saveEvent(null, [
     'name' => 'Próba testowa',
     'planned_at' => '2026-08-23T18:00',

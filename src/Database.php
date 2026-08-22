@@ -93,6 +93,23 @@ final class Database
                 FOREIGN KEY (song_id) REFERENCES songs(id) ON DELETE CASCADE,
                 FOREIGN KEY (section_id) REFERENCES song_sections(id)
             )",
+            "CREATE TABLE IF NOT EXISTS categories (
+                id {$id},
+                name VARCHAR(180) NOT NULL,
+                group_name VARCHAR(40) NOT NULL DEFAULT 'section',
+                sort_order {$integer} NOT NULL DEFAULT 0,
+                color VARCHAR(24) NULL,
+                created_at VARCHAR(32) NOT NULL,
+                UNIQUE (name, group_name)
+            )",
+            "CREATE TABLE IF NOT EXISTS song_categories (
+                song_id {$integer} NOT NULL,
+                category_id {$integer} NOT NULL,
+                position {$integer} NOT NULL DEFAULT 0,
+                PRIMARY KEY (song_id, category_id),
+                FOREIGN KEY (song_id) REFERENCES songs(id) ON DELETE CASCADE,
+                FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+            )",
             "CREATE TABLE IF NOT EXISTS events (
                 id {$id},
                 name VARCHAR(240) NOT NULL,
@@ -154,5 +171,102 @@ final class Database
         foreach ($statements as $statement) {
             $pdo->exec($statement);
         }
+
+        self::backfillCategories($pdo);
+    }
+
+    private static function backfillCategories(PDO $pdo): void
+    {
+        if ((int) $pdo->query('SELECT COUNT(*) FROM songs')->fetchColumn() === 0) {
+            return;
+        }
+
+        $assigned = (int) $pdo->query('SELECT COUNT(*) FROM song_categories')->fetchColumn();
+        if ($assigned > 0) {
+            return;
+        }
+
+        $sectionOrder = [
+            'Módl się śpiewem',
+            'Śpiewem radujmy innych',
+            'Duchu napełnij życie me',
+            'Ofiaruję Panie Ci cały mój świat',
+            'Pasterzu czuwaj zawsze przy mnie',
+            'Z Maryją przez świat',
+            'Nie siedź tyle tylko rusz się',
+            'Prawdziwe Dyskotekowe hity ciszy',
+            'Tradycja zawsze na czasie',
+            'Wielki Post',
+            'Wielkanoc',
+            'Inności piękności',
+            'Części stałe',
+        ];
+        $sectionSort = array_flip($sectionOrder);
+        $positions = [];
+
+        $pdo->beginTransaction();
+        try {
+            $songs = $pdo->query('SELECT id, comment FROM songs WHERE archived = 0 ORDER BY id')->fetchAll();
+            foreach ($songs as $song) {
+                $comment = (string) ($song['comment'] ?? '');
+                $assignments = [];
+
+                if (str_contains($comment, 'Import: Śpiewnik guanelliański')) {
+                    $assignments[] = ['Śpiewnik guanelliański', 'source', 0];
+                    if (preg_match('/Kategoria:\s*([^\r\n]+)/u', $comment, $match)) {
+                        $name = trim($match[1]);
+                        $assignments[] = [$name, 'section', (int) ($sectionSort[$name] ?? 999)];
+                    }
+                }
+
+                if (str_contains($comment, 'Import: OpenLP')) {
+                    $assignments[] = ['OpenLP', 'source', 1];
+                    if (preg_match('/^Śpiewnik:\s*([^\r\n]+)/mu', $comment, $match)) {
+                        foreach (array_filter(array_map('trim', explode(',', $match[1]))) as $name) {
+                            $assignments[] = [$name, 'songbook', 0];
+                        }
+                    }
+                }
+
+                foreach ($assignments as [$name, $group, $sortOrder]) {
+                    $categoryId = self::ensureCategory($pdo, $name, $group, $sortOrder);
+                    $positionKey = $group . '|' . $name;
+                    $position = $positions[$positionKey] ?? 0;
+                    self::assignCategory($pdo, (int) $song['id'], $categoryId, $position);
+                    $positions[$positionKey] = $position + 1;
+                }
+            }
+            $pdo->commit();
+        } catch (\Throwable $error) {
+            $pdo->rollBack();
+            throw $error;
+        }
+    }
+
+    private static function ensureCategory(PDO $pdo, string $name, string $group, int $sortOrder): int
+    {
+        $select = $pdo->prepare('SELECT id FROM categories WHERE name = ? AND group_name = ?');
+        $select->execute([$name, $group]);
+        $id = $select->fetchColumn();
+        if ($id !== false) {
+            return (int) $id;
+        }
+
+        $insert = $pdo->prepare(
+            'INSERT INTO categories (name, group_name, sort_order, color, created_at) VALUES (?, ?, ?, NULL, ?)'
+        );
+        $insert->execute([$name, $group, $sortOrder, date(DATE_ATOM)]);
+        return (int) $pdo->lastInsertId();
+    }
+
+    private static function assignCategory(PDO $pdo, int $songId, int $categoryId, int $position): void
+    {
+        $select = $pdo->prepare('SELECT 1 FROM song_categories WHERE song_id = ? AND category_id = ?');
+        $select->execute([$songId, $categoryId]);
+        if ($select->fetchColumn() !== false) {
+            return;
+        }
+        $insert = $pdo->prepare('INSERT INTO song_categories (song_id, category_id, position) VALUES (?, ?, ?)');
+        $insert->execute([$songId, $categoryId, $position]);
     }
 }

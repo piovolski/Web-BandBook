@@ -177,9 +177,53 @@ try {
         if ($event === null) {
             throw new RuntimeException('Nie znaleziono wydarzenia.');
         }
-        $availableSongs = $repo->songs();
-        View::render('events/detail', compact('event', 'availableSongs') + ['title' => $event['name'], 'active' => 'events']);
+        $browserSongs = $repo->songBrowser((int) $event['id']);
+        $categories = $repo->categories();
+        View::render('events/detail', compact('event', 'browserSongs', 'categories') + ['title' => $event['name'], 'active' => 'events', 'mainClass' => 'app-shell planner-shell']);
         exit;
+    }
+
+    if ($route === 'api-song-preview') {
+        $song = $repo->songPreview((int) ($_GET['id'] ?? 0));
+        if ($song === null) {
+            json_response(['error' => 'Nie znaleziono pieśni.'], 404);
+        }
+        json_response(['song' => $song]);
+    }
+
+    if ($route === 'api-event-song-add' && $method === 'POST') {
+        verify_csrf();
+        $payload = json_decode((string) file_get_contents('php://input'), true);
+        if (!is_array($payload)) {
+            $payload = $_POST;
+        }
+        $eventId = (int) ($_GET['id'] ?? 0);
+        $event = $repo->event($eventId);
+        if ($event === null) {
+            json_response(['error' => 'Nie znaleziono wydarzenia.'], 404);
+        }
+        $songId = (int) ($payload['song_id'] ?? 0);
+        $alreadyUsed = count(array_filter(
+            $event['songs'],
+            static fn (array $eventSong): bool => (int) $eventSong['song_id'] === $songId
+        ));
+        if ($alreadyUsed > 0 && empty($payload['allow_duplicate'])) {
+            json_response(['error' => 'Ta pieśń jest już w repertuarze.', 'duplicate' => true], 409);
+        }
+
+        $eventSongId = $repo->addSongToEvent($eventId, $songId);
+        $event = $repo->event($eventId);
+        $eventSong = $repo->eventSong($eventSongId);
+        if ($event === null || $eventSong === null) {
+            json_response(['error' => 'Nie udało się odczytać dodanej pozycji.'], 500);
+        }
+        $song = $eventSong;
+        $index = count($event['songs']) - 1;
+        $total = count($event['songs']);
+        ob_start();
+        require dirname(__DIR__) . '/views/events/repertoire_item.php';
+        $html = (string) ob_get_clean();
+        json_response(['added' => true, 'event_song_id' => $eventSongId, 'count' => $total, 'html' => $html]);
     }
 
     if ($route === 'event-song-add' && $method === 'POST') {

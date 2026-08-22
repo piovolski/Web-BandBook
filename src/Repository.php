@@ -79,6 +79,86 @@ final class Repository
         )->fetchAll();
     }
 
+    public function categories(): array
+    {
+        return $this->db->query(
+            'SELECT c.*, COUNT(s.id) AS song_count
+             FROM categories c
+             LEFT JOIN song_categories sc ON sc.category_id = c.id
+             LEFT JOIN songs s ON s.id = sc.song_id AND s.archived = 0
+             GROUP BY c.id
+             HAVING COUNT(s.id) > 0
+             ORDER BY c.group_name, c.sort_order, c.name'
+        )->fetchAll();
+    }
+
+    public function songBrowser(int $eventId): array
+    {
+        $songs = $this->db->query(
+            "SELECT s.id, s.title, s.alt_title, s.source_key, s.bpm, s.meter, s.comment, s.notation_profile,
+                    (SELECT ss.lyrics FROM song_sections ss WHERE ss.song_id = s.id AND ss.archived = 0 ORDER BY ss.position, ss.id LIMIT 1) AS first_lyrics,
+                    (SELECT COUNT(*) FROM song_sections ss WHERE ss.song_id = s.id AND ss.archived = 0) AS section_count,
+                    (SELECT COUNT(*) FROM song_sections ss WHERE ss.song_id = s.id AND ss.archived = 0 AND TRIM(ss.chords) <> '') AS chord_section_count
+             FROM songs s WHERE s.archived = 0 ORDER BY s.title"
+        )->fetchAll();
+
+        $categoryRows = $this->db->query(
+            'SELECT sc.song_id, c.id, c.name, c.group_name, sc.position
+             FROM song_categories sc
+             JOIN categories c ON c.id = sc.category_id
+             JOIN songs s ON s.id = sc.song_id AND s.archived = 0
+             ORDER BY c.group_name, c.sort_order, sc.position, c.name'
+        )->fetchAll();
+        $categoriesBySong = [];
+        foreach ($categoryRows as $category) {
+            $categoriesBySong[(int) $category['song_id']][] = [
+                'id' => (int) $category['id'],
+                'name' => $category['name'],
+                'group' => $category['group_name'],
+                'position' => (int) $category['position'],
+            ];
+        }
+
+        $eventSongs = $this->db->prepare('SELECT song_id, COUNT(*) AS uses FROM event_songs WHERE event_id = ? GROUP BY song_id');
+        $eventSongs->execute([$eventId]);
+        $uses = [];
+        foreach ($eventSongs->fetchAll() as $eventSong) {
+            $uses[(int) $eventSong['song_id']] = (int) $eventSong['uses'];
+        }
+
+        foreach ($songs as &$song) {
+            $songId = (int) $song['id'];
+            $song['id'] = $songId;
+            $song['bpm'] = $song['bpm'] !== null ? (int) $song['bpm'] : null;
+            $song['section_count'] = (int) $song['section_count'];
+            $song['has_chords'] = (int) $song['chord_section_count'] > 0;
+            unset($song['chord_section_count']);
+            $song['categories'] = $categoriesBySong[$songId] ?? [];
+            $song['event_uses'] = $uses[$songId] ?? 0;
+            $song['authors'] = $this->commentMetadata((string) ($song['comment'] ?? ''), 'Autorzy');
+            unset($song['comment']);
+        }
+        unset($song);
+
+        return $songs;
+    }
+
+    public function songPreview(int $id): ?array
+    {
+        $song = $this->song($id);
+        if ($song === null) {
+            return null;
+        }
+        $statement = $this->db->prepare(
+            'SELECT c.id, c.name, c.group_name FROM song_categories sc JOIN categories c ON c.id = sc.category_id
+             WHERE sc.song_id = ? ORDER BY c.group_name, c.sort_order, sc.position, c.name'
+        );
+        $statement->execute([$id]);
+        $song['categories'] = $statement->fetchAll();
+        $song['authors'] = $this->commentMetadata((string) ($song['comment'] ?? ''), 'Autorzy');
+        return $song;
+    }
+
     public function song(int $id): ?array
     {
         $statement = $this->db->prepare('SELECT * FROM songs WHERE id = ?');
@@ -655,7 +735,7 @@ final class Repository
     {
         $existingTitles = [];
         foreach ($this->songs(true) as $existingSong) {
-            $existingTitles[trim((string) $existingSong['title'])] = true;
+            $existingTitles[trim((string) $existingSong['title'])] = (int) $existingSong['id'];
         }
 
         $result = ['imported' => 0, 'skipped' => 0];
@@ -669,12 +749,14 @@ final class Repository
                 throw new RuntimeException('Pieśń w pliku importu nie ma tytułu lub części.');
             }
             if (isset($existingTitles[$title])) {
+                $this->assignImportedCategories($existingTitles[$title], $song);
                 $result['skipped']++;
                 continue;
             }
 
-            $this->saveStructuredSong($song);
-            $existingTitles[$title] = true;
+            $songId = $this->saveStructuredSong($song);
+            $this->assignImportedCategories($songId, $song);
+            $existingTitles[$title] = $songId;
             $result['imported']++;
         }
 
@@ -724,7 +806,7 @@ final class Repository
         return $this->seedSongbook();
     }
 
-    private function saveStructuredSong(array $song): void
+    private function saveStructuredSong(array $song): int
     {
         $sections = [];
         $form = [];
@@ -739,10 +821,76 @@ final class Repository
                 $song['form']
             );
         }
-        $this->saveSong(null, $song + [
+        return $this->saveSong(null, $song + [
             'sections_json' => json_encode($sections, JSON_UNESCAPED_UNICODE),
             'form_json' => json_encode($form, JSON_UNESCAPED_UNICODE),
         ]);
+    }
+
+    private function assignImportedCategories(int $songId, array $song): void
+    {
+        $assignments = [];
+        if (!empty($song['import_category'])) {
+            $assignments[] = [(string) $song['import_category'], 'section', $this->sectionCategoryOrder((string) $song['import_category'])];
+            $assignments[] = ['Śpiewnik guanelliański', 'source', 0];
+        }
+        if (($song['import_source'] ?? null) === 'OpenLP') {
+            $assignments[] = ['OpenLP', 'source', 1];
+            foreach (($song['import_songbooks'] ?? []) as $songbook) {
+                if (trim((string) $songbook) !== '') {
+                    $assignments[] = [trim((string) $songbook), 'songbook', 0];
+                }
+            }
+        }
+
+        foreach ($assignments as [$name, $group, $sortOrder]) {
+            $categoryId = $this->ensureCategory($name, $group, $sortOrder);
+            $select = $this->db->prepare('SELECT 1 FROM song_categories WHERE song_id = ? AND category_id = ?');
+            $select->execute([$songId, $categoryId]);
+            if ($select->fetchColumn() !== false) {
+                continue;
+            }
+            $positionStatement = $this->db->prepare('SELECT COALESCE(MAX(position), -1) + 1 FROM song_categories WHERE category_id = ?');
+            $positionStatement->execute([$categoryId]);
+            $insert = $this->db->prepare('INSERT INTO song_categories (song_id, category_id, position) VALUES (?, ?, ?)');
+            $insert->execute([$songId, $categoryId, (int) $positionStatement->fetchColumn()]);
+        }
+    }
+
+    private function ensureCategory(string $name, string $group, int $sortOrder): int
+    {
+        $select = $this->db->prepare('SELECT id FROM categories WHERE name = ? AND group_name = ?');
+        $select->execute([$name, $group]);
+        $id = $select->fetchColumn();
+        if ($id !== false) {
+            return (int) $id;
+        }
+        $insert = $this->db->prepare(
+            'INSERT INTO categories (name, group_name, sort_order, color, created_at) VALUES (?, ?, ?, NULL, ?)'
+        );
+        $insert->execute([$name, $group, $sortOrder, now()]);
+        return (int) $this->db->lastInsertId();
+    }
+
+    private function commentMetadata(string $comment, string $label): ?string
+    {
+        if (preg_match('/^' . preg_quote($label, '/') . ':\s*([^\r\n]+)/mu', $comment, $match)) {
+            return trim($match[1]);
+        }
+        return null;
+    }
+
+    private function sectionCategoryOrder(string $name): int
+    {
+        $order = [
+            'Módl się śpiewem', 'Śpiewem radujmy innych', 'Duchu napełnij życie me',
+            'Ofiaruję Panie Ci cały mój świat', 'Pasterzu czuwaj zawsze przy mnie',
+            'Z Maryją przez świat', 'Nie siedź tyle tylko rusz się',
+            'Prawdziwe Dyskotekowe hity ciszy', 'Tradycja zawsze na czasie',
+            'Wielki Post', 'Wielkanoc', 'Inności piękności', 'Części stałe',
+        ];
+        $position = array_search($name, $order, true);
+        return $position === false ? 999 : (int) $position;
     }
 
     private function liveState(int $eventId): array
