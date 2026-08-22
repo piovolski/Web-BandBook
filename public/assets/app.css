@@ -328,7 +328,7 @@ textarea { resize: vertical; }
 .notation-preview { display: flex; justify-content: space-between; gap: 1rem; margin-top: 20px; padding: 18px; border-radius: 10px; color: var(--forest); background: var(--sage); }
 
 .live-page { width: 100%; min-height: 100vh; margin: 0; padding: 0; background: #e9ebe5; }
-.live-app { min-height: 100vh; }
+.live-app { --live-header-height: 98px; min-height: 100vh; }
 .live-header { position: sticky; z-index: 45; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 25px; min-height: 98px; padding: 14px 28px; color: #fff; background: var(--forest-2); box-shadow: 0 8px 30px rgba(0,0,0,.14); }
 .live-header .back-link { margin: 0 0 3px; font-size: .73rem; }
 .live-header .eyebrow { margin-bottom: .15rem; color: #8fc4ae; }
@@ -372,7 +372,7 @@ textarea { resize: vertical; }
 .connection i { width: 8px; height: 8px; border-radius: 50%; background: #65d296; box-shadow: 0 0 0 4px rgba(101,210,150,.12); }
 .connection.offline i { background: #e46c6c; }
 .live-layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); min-height: calc(100vh - 98px); }
-.live-setlist { position: sticky; top: 98px; align-self: start; height: calc(100vh - 98px); overflow-y: auto; padding: 24px 16px; color: #fff; background: #17362e; }
+.live-setlist { position: sticky; z-index: 35; top: var(--live-header-height); align-self: start; height: calc(100vh - var(--live-header-height)); overflow-y: auto; padding: 24px 16px; color: #fff; background: #17362e; }
 .live-setlist > .eyebrow { padding: 0 10px; color: #8db4a4; }
 .live-song-link { position: relative; display: grid; grid-template-columns: 27px 1fr auto; align-items: center; width: 100%; gap: 8px; padding: 10px; border: 0; border-radius: 9px; color: rgba(255,255,255,.68); background: transparent; text-align: left; cursor: pointer; }
 .live-song-link:hover, .live-song-link.active { color: #fff; background: rgba(255,255,255,.1); }
@@ -536,7 +536,7 @@ textarea { resize: vertical; }
   .follow-toggle { display: none; }
   .connection { width: 100%; justify-content: flex-end; }
   .live-layout { display: block; }
-  .live-setlist { position: static; width: 100%; height: auto; padding: 10px; overflow-x: auto; }
+  .live-setlist { position: sticky; z-index: 40; top: var(--live-header-height); width: 100%; height: auto; padding: 10px; overflow-x: auto; overflow-y: hidden; box-shadow: 0 8px 20px rgba(0,0,0,.16); }
   .live-setlist > .eyebrow, .live-event-note { display: none; }
   .live-setlist > div:first-of-type { display: flex; gap: 6px; width: max-content; }
   .live-song-link { grid-template-columns: 22px minmax(120px, auto); width: auto; }

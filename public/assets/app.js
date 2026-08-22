@@ -633,7 +633,16 @@
     const outputSwitch = $('[data-live-output-switch]', root);
     const fontControl = $('[data-live-font-control]', root);
     const obsSettings = $('[data-live-obs-settings]', root);
+    const liveHeader = $('.live-header', root);
     const csrf = root.dataset.csrf;
+
+    const updateLiveHeaderHeight = () => {
+      if (!liveHeader) return;
+      root.style.setProperty('--live-header-height', `${Math.ceil(liveHeader.getBoundingClientRect().height)}px`);
+    };
+    updateLiveHeaderHeight();
+    if ('ResizeObserver' in window) new ResizeObserver(updateLiveHeaderHeight).observe(liveHeader);
+    else window.addEventListener('resize', updateLiveHeaderHeight);
 
     const request = async (url, options = {}) => {
       const response = await fetch(url, options);
